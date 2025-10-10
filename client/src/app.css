@@ -1,0 +1,12 @@
+.app-layout {
+  min-height: 100vh;
+}
+.app-right {
+  min-height: 100vh;
+}
+.app-bg {
+  min-height: calc(100vh - 56px); /* trừ Header cao 56px */
+}
+.app-content {
+  padding: 16px;
+}

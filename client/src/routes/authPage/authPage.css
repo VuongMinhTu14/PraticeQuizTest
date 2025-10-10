@@ -1,0 +1,112 @@
+/* wrapper tách biệt hoàn toàn */
+.pq-auth{
+  min-height: calc(100vh - 56px);
+  display:flex; align-items:center; justify-content:center;
+  padding:24px; background:#f5f8ff;
+}
+
+/* card */
+.pq-auth__card{
+  width:100%; max-width:480px;
+  background:#fff; border:1px solid #eef0f4; border-radius:16px;
+  padding:28px 24px 22px; box-shadow:0 8px 28px rgba(0,0,0,.06);
+  transition:all .3s ease;
+}
+
+/* logo + title */
+.pq-auth__logo{
+  width:44px; 
+  height:44px; 
+  border-radius:999px; 
+  background:#111827; 
+  color:#fff;
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  font-weight:800; 
+  margin:0 auto 10px;
+}
+
+.pq-auth__title{ 
+  text-align:center; 
+  margin:8px 0 18px; 
+  font-size:22px; 
+  font-weight:700; 
+}
+
+/* alert */
+.pq-auth__alert{ 
+  display:flex; 
+  flex-direction:column; 
+  gap:8px; 
+  margin-bottom:14px; 
+}
+
+/* forms */
+.pq-auth__form{ 
+  margin-top:6px; 
+  display:flex; 
+  flex-direction:column;
+}
+.pq-auth__form--login{ gap:10px; }
+.pq-auth__form--register{ gap:8px; }
+
+/* groups */
+.pq-auth__group{ display:flex; 
+  flex-direction:column; 
+  gap:6px; 
+  margin-bottom:12px; 
+}
+.pq-auth__group label{ 
+  font-size:13px; 
+  color:#4b5563; 
+}
+.pq-auth__group input{
+  height:42px; 
+  border:1px solid #e5e7eb; 
+  border-radius:10px; 
+  padding:0 12px; 
+  outline:none; 
+  background:#fff; 
+  transition:.2s;
+}
+.pq-auth__group input:focus{ 
+  border-color:#1677ff; 
+  box-shadow:0 0 0 3px rgba(22,119,255,.15); 
+}
+
+/* buttons */
+.pq-auth__btn{
+  height:44px; 
+  border-radius:999px; 
+  font-weight:600; 
+  cursor:pointer; 
+  width:100%; 
+  border:0; 
+  transition:background .25s;
+}
+.pq-auth__btn--primary{ background:#111827; color:#fff; }
+.pq-auth__btn--primary:hover{ background:#1e293b; }
+.pq-auth__btn[disabled]{ opacity:.7; cursor:not-allowed; }
+
+/* switch text – luôn căn giữa */
+.pq-auth__switch{
+  text-align:center; 
+  color:#374151; 
+  cursor:pointer; 
+  font-size:14px; 
+  font-weight:400; 
+  transition:color .2s; 
+  margin-top:12px;
+}
+.pq-auth__switch b{ color:#111827; transition:.2s; }
+.pq-auth__switch b:hover{ color:#1677ff; }
+
+/* animation hint */
+.pq-auth .form-anim{ will-change: opacity, transform, filter; }
+
+/* responsive */
+@media (max-width: 480px){
+  .pq-auth__card{ padding:20px; }
+  .pq-auth__title{ font-size:20px; }
+}
