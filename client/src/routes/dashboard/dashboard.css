@@ -1,1 +1,55 @@
 .dashboard-page{padding:12px}
+/* khung ngoài */
+.slide-container{
+  width: 100%;
+  max-width: 100%;     /* chỉnh theo ý */
+  margin: 12px auto 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0,0,0,.10);
+}
+
+/* chiều cao vùng slide */
+.slide{
+  height: 396px;         /* bạn đổi ở đây */
+}
+@media (max-width: 768px){
+  .slide{ height: 240px; }
+}
+
+/* ảnh full khung, không méo */
+.slide-img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* quan trọng */
+  display: block;
+}
+/* vùng chứa slider: canh giữa, responsive */
+.slide-container{
+  width:100%;
+  max-width:1350px;
+  margin: 16px auto 8px;
+}
+/* khung slide cố định tỉ lệ (1350x400 ≈ 27:8) */
+.slide-frame{
+  position:relative;
+  width:100%;
+  aspect-ratio: 27 / 8;     
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,.08);
+  background: #eaf1ff;      
+}
+
+/* ảnh luôn giữ tỉ lệ gốc; không kéo méo */
+.slide-frame img{
+  width:100%;
+  height:100%;
+  object-fit: contain;       
+  display:block;
+}
+
+
+/* chấm điều hướng nhẹ nhàng */
+.custom-dots li button{ background: rgba(255,255,255,.5); }
+.custom-dots li.slick-active button{ background: #0000; }

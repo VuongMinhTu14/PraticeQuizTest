@@ -1,109 +1,90 @@
-/* Glass topbar */
-.topbar {
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+/* ========== TOPBAR (Light/Dark by CSS vars) ========== */
+:root {
+  --tb-bg: rgba(255,255,255,.60);
+  --tb-border: rgba(0,0,0,.05);
+  --chip-bg: rgba(255,255,255,.72);
+  --chip-border: rgba(0,0,0,.06);
+  --chip-text: #0b1220;
+
+  --badge-bg: #fff;
+  --badge-border: rgba(0,0,0,.06);
+  --badge-text: #111;
+
+  --dd-bg: rgba(255,255,255,.90);
+  --dd-border: rgba(0,0,0,.06);
+  --txt: #0b1220;
+}
+
+body[data-theme="dark"] {
+  --tb-bg: rgba(14,20,33,.75);
+  --tb-border: rgba(255,255,255,.06);
+  --chip-bg: rgba(255,255,255,.10);
+  --chip-border: rgba(255,255,255,.10);
+  --chip-text: #e5e7eb;
+
+  --badge-bg: rgba(255,255,255,.12);
+  --badge-border: rgba(255,255,255,.12);
+  --badge-text: #fff;
+
+  --dd-bg: rgba(24,30,45,.88);
+  --dd-border: rgba(255,255,255,.10);
+  --txt: #e5e7eb;
+}
+
+/* ---------- Bar glass: fit full width ---------- */
+.topbar{
+  height:56px;
+  display:flex; align-items:center; justify-content:flex-end;
+  padding:0 24px;
+  position:sticky; top:0; z-index:20;
+  border-radius:0;
   backdrop-filter: blur(14px) saturate(160%);
-  background: rgba(255, 255, 255, 0.55);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-  transition: all 0.3s ease;
+  background:var(--tb-bg);
+  border-bottom:1px solid var(--tb-border);
+  color:var(--txt);
 }
 
-/* Dark mode topbar */
-body[data-theme="dark"] .topbar {
-  background: rgba(14, 20, 33, 0.75);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 25px rgba(0,0,0,0.3);
-}
+.topbar .actions{ display:flex; align-items:center; gap:12px; }
 
-/* actions container */
-.topbar .actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* ---------- Auth button (giữ class của bạn) ---------- */
+.topbar .btn-black{
+  background:#111827; color:#fff; border-radius:999px;
+  padding:8px 14px; border:none; transition:.22s;
 }
+.topbar .btn-black:hover{ background:#1e293b; transform:translateY(-1px); }
 
-/* login button */
-.topbar .btn-black {
-  background: #111827;
-  color: #fff;
-  border-radius: 999px;
-  padding: 8px 16px;
-  transition: all 0.25s ease;
-}
-.topbar .btn-black:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
-}
+/* ---------- User box + welcome chip ---------- */
+.userbox{ position:relative; }
 
-/* userbox */
-.userbox {
-  position: relative;
+.welcome-btn{
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  background:var(--chip-bg);
+  border:1px solid var(--chip-border);
+  color:var(--chip-text);
+  padding:6px 12px; border-radius:20px; transition:.22s;
 }
+.welcome-btn:hover{ transform:translateY(-1px); }
 
-/* welcome text với điểm */
-.welcome-btn {
-  background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.25s ease;
+/* ---------- Points badge trong welcome chip ---------- */
+.points-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:2px 8px; border-radius:999px;
+  background:var(--badge-bg); color:var(--badge-text);
+  border:1px solid var(--badge-border); font-weight:600;
 }
-.welcome-btn:hover {
-  background: rgba(255,255,255,0.85);
-  transform: translateY(-1px);
-}
+.points-icon{ color:#f59e0b; }
 
-/* trophy icon cho điểm */
-.welcome-btn .trophy-icon {
-  color: #f59e0b;
-  font-size: 16px;
+/* ---------- Dropdown ---------- */
+.dropdown{
+  position:absolute; top:44px; right:0; min-width:160px; overflow:hidden;
+  background:var(--dd-bg); backdrop-filter:blur(10px);
+  border:1px solid var(--dd-border); border-radius:12px;
+  box-shadow:0 8px 28px rgba(0,0,0,.12);
 }
-
-/* dropdown */
-.dropdown {
-  position: absolute;
-  top: 44px;
-  right: 0;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 12px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
-  overflow: hidden;
-  min-width: 160px;
+.dropdown-item{
+  width:100%; padding:10px 14px; border:0; background:transparent;
+  text-align:left; transition:.2s; cursor:pointer; color:var(--txt);
 }
-
-.dropdown-item {
-  width: 100%;
-  padding: 10px 14px;
-  text-align: left;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.dropdown-item:hover {
-  background: rgba(22,119,255,0.1);
-}
-.dropdown-item.danger:hover {
-  background: rgba(239,68,68,0.15);
-  color: #b91c1c;
-}
-.divider {
-  height: 1px;
-  background: rgba(0,0,0,0.08);
-  margin: 4px 0;
-}
+.dropdown-item:hover{ background:rgba(22,119,255,.12); }
+.dropdown-item.danger:hover{ background:rgba(239,68,68,.12); color:#ef4444; }
+.divider{ height:1px; background:var(--tb-border); margin:4px 0; }

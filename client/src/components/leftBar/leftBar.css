@@ -1,27 +1,18 @@
-/* ---------- SIDEBAR ---------- */
 .leftbar-sider {
-  margin: 8px;
-  border-radius: 0 20px 20px 0;
+  margin: 0;
+  border-radius: 0;
   overflow: hidden;
   position: sticky;
   top: 0;
-  height: calc(100vh - 16px);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.86) !important;
+  backdrop-filter: blur(12px) saturate(150%);
+  border-right: 1px solid rgba(0,0,0,0.06);
 }
 
-/* Light mode glass */
-.leftbar-sider.light {
-  background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(14px) saturate(150%);
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-/* Dark mode glass */
-.leftbar-sider.dark {
+body[data-theme="dark"] .leftbar-sider {
   background: rgba(14, 20, 33, 0.78) !important;
-  backdrop-filter: blur(12px) saturate(140%);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255,255,255,0.06);
 }
 
 /* ---------- BRAND ---------- */
@@ -32,74 +23,35 @@
   padding: 0 16px;
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.3px;
 }
 
-.leftbar-logo.light { color: #111827; }
-.leftbar-logo.dark  { color: #e5e7eb; }
-
-/* ---------- MENU ITEMS ---------- */
+.leftbar-logo { 
+  color: inherit;
+  color: #111827;
+}
+body[data-theme="dark"] .leftbar-logo { color: #e5e7eb; }
 .leftbar-menu .ant-menu-item {
-  margin: 6px 12px;
+  margin: 6px 8px;
   border-radius: 12px;
-  transition: all 0.25s ease;
+  transition: all .22s ease;
 }
-
-/* hover gradient + glow effect */
 .leftbar-menu .ant-menu-item:hover {
-  background: linear-gradient(90deg, rgba(22,119,255,0.18) 0%, rgba(22,119,255,0.08) 100%) !important;
+  background: rgba(22,119,255,.12) !important;
   transform: translateX(2px);
-  box-shadow: 0 0 12px rgba(22, 119, 255, 0.2);
+}
+.leftbar-sider .ant-menu-item-selected {
+  background: rgba(22,119,255,.16) !important;
+  color: inherit !important;
 }
 
-/* active item */
-.leftbar-sider.light .ant-menu-item-selected {
-  background: rgba(22, 119, 255, 0.15) !important;
-  color: #0b1220 !important;
-}
-.leftbar-sider.dark .ant-menu-item-selected {
-  background: rgba(255,255,255,0.12) !important;
-  color: #fff !important;
-}
-
-/* icons + text */
-.ant-menu-item .anticon {
-  font-size: 18px;
-  transition: all 0.25s ease;
-}
-
-/* 🔥 icon glow effect khi hover */
-.leftbar-menu .ant-menu-item:hover .anticon {
-  color: #1677ff;
-  transform: scale(1.15);
-  filter: drop-shadow(0 0 6px rgba(22, 119, 255, 0.4));
-}
-
-/* title text */
-.ant-menu-item .ant-menu-title-content {
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-/* ---------- COLLAPSE TRIGGER ---------- */
 .leftbar-trigger {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 14px;
-  display: flex;
-  justify-content: center;
+  left: 0; right: 0; bottom: 14px;
+  display: flex; justify-content: center;
 }
-
 .trigger-btn {
   border: none;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-  transition: all 0.3s;
+  box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  transition: transform .25s ease;
 }
-.trigger-btn:hover {
-  transform: scale(1.08);
-}
-
-/* theme trigger */
-.trigger-btn.light { background: #111827; color: #fff; }
-.trigger-btn.dark { background: #f1f5f9; color: #111; }
+.trigger-btn:hover { transform: scale(1.06); }
