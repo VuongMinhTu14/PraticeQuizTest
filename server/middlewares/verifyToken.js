@@ -7,7 +7,7 @@ export const verifyToken = (req, res, next) => {
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
 
     if (!token) {
-      return res.status(401).json({ ok: false, msg: "No token, unauthorized" });
+      return res.status(401).json({ ok: false, msg: "Bạn cần đăng nhập để luyện đề hoặc chơi game" });
     }
 
     // Xác thực token

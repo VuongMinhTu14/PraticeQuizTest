@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const Dashboard = React.lazy(() => import("./routes/dashboard/dashboard"));
 const Practice = React.lazy(() => import("./routes/practice/practice"));
 const PracticeDetail = React.lazy(() => import("./routes/practice/practiceDetail"));
+const AttemptRunner = React.lazy(() => import("./routes/attempt/attemptRunner"));
 const Game = React.lazy(() => import("./routes/game/game"));
 const AuthPage = React.lazy(() => import("./routes/authPage/authPage"));
 
@@ -24,6 +25,7 @@ createRoot(document.getElementById("root")).render(
               <Route path='/' element={<Dashboard />} />
               <Route path='/practice' element={<Practice />} />
               <Route path="/practice/:id" element={<PracticeDetail />} />
+              <Route path="/attempt/:attemptId" element={<AttemptRunner />} />
               <Route path='/game' element={<Game />} />
             </Route>
             <Route path="/auth" element={<AuthPage />} />

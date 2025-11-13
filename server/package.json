@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch --env-file=.env index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "seed:toeic": "node ./utils/seedToeic.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

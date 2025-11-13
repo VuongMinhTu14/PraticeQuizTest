@@ -1,4 +1,4 @@
-.test-card {
+.practice-card {
   position: relative;
   border: 1px solid rgba(0,0,0,.06);
   background: rgba(255,255,255,.6);
@@ -7,18 +7,17 @@
   padding: 16px 14px 12px;
   transition: transform .25s ease, box-shadow .25s ease;
 }
-.test-card:hover {
+.practice-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 14px rgba(0,0,0,.08);
 }
-
-body[data-theme="dark"] .test-card {
+body[data-theme="dark"] .practice-card {
   background: rgba(14,20,33,.75);
   border-color: rgba(255,255,255,.06);
 }
 
-/* Premium sticker góc phải */
-.test-card .sticker {
+/* premium sticker góc phải */
+.practice-card .sticker {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -33,42 +32,32 @@ body[data-theme="dark"] .test-card {
   border-radius: 999px;
   box-shadow: 0 2px 4px rgba(0,0,0,.15);
 }
-body[data-theme="dark"] .test-card .sticker {
+body[data-theme="dark"] .practice-card .sticker {
   background: linear-gradient(135deg,#fde047,#ca8a04);
   color: #000;
 }
-.sticker-icon {
-  font-size: 12px;
-  line-height: 1;
-}
+.sticker-icon { font-size: 12px; line-height: 1; }
 
-/* Title & Meta info */
-.test-title {
+/* nội dung */
+.practice-card .title {
   font-weight: 700;
   font-size: 16px;
   margin-bottom: 6px;
   line-height: 1.3;
 }
-.test-meta {
+.practice-card .meta {
   font-size: 13px;
-  opacity: .8;
+  opacity: .85;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 10px;
 }
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.dot {
-  opacity: .5;
-}
+.meta-chip { display: inline-flex; align-items: center; gap: 4px; }
+.dot { opacity: .5; }
 
-/* Tags */
-.test-tags {
+.practice-card .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -80,30 +69,27 @@ body[data-theme="dark"] .test-card .sticker {
   padding: 4px 8px;
   border-radius: 999px;
 }
-body[data-theme="dark"] .tag {
-  background: rgba(255,255,255,.08);
-}
+body[data-theme="dark"] .tag { background: rgba(255,255,255,.08); }
 
-/* Footer */
-.test-footer {
+.practice-card .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  opacity: .85;
+  opacity: .9;
 }
 .btn-detail {
   text-decoration: none;
   background: #111827;
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
   padding: 7px 12px;
   border-radius: 10px;
   font-size: 13px;
   transition: .18s;
 }
-.btn-detail:hover { opacity: .9; }
+.btn-detail:hover { opacity: .92; }
 
-/* Border hint */
-.test-card.premium { border-top: 3px solid #facc15; }
-.test-card.free { border-top: 3px solid #4ade80; }
+/* gợi ý loại card */
+.practice-card.premium { border-top: 3px solid #facc15; }
+.practice-card.free    { border-top: 3px solid #4ade80; }

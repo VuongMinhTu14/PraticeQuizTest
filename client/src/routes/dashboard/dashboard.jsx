@@ -1,7 +1,7 @@
 import { Carousel } from "antd";
 import useAuthStore from "../../utils/authStore";
 import "./dashboard.css";
-
+import { SmileTwoTone } from "@ant-design/icons";
 const Dashboard = () => {
   const { currentUser } = useAuthStore();
   const username = currentUser?.username || currentUser?.displayName || "User";
@@ -14,7 +14,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
-      <h2>Xin chào, <strong>{username}</strong> 👋</h2>
+      <h2>Xin chào, <strong>{username}</strong> <SmileTwoTone /></h2>
 
       <div className="slide-container">
         <Carousel autoplay dots={{ className: "custom-dots" }}>

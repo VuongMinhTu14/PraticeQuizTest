@@ -1,4 +1,4 @@
-import './testCard.css'
+import './practiceCard.css'
 import { Link } from 'react-router-dom'
 import {
   ClockCircleOutlined,
@@ -9,12 +9,12 @@ import {
   CrownFilled,
 } from '@ant-design/icons'
 
-const TestCard = ({ item }) => {
+const PracticeCard = ({ item }) => {
   const minutes = Math.round((item?.durationSec ?? 0) / 60)
   const isPremium = !item?.isFree
 
   return (
-    <div className={`test-card ${isPremium ? 'premium' : 'free'}`}>
+    <div className={`practice-card ${isPremium ? 'premium' : 'free'}`}>
       {isPremium && (
         <div className='sticker'>
           <CrownFilled className='sticker-icon' />
@@ -22,9 +22,9 @@ const TestCard = ({ item }) => {
         </div>
       )}
 
-      <div className='test-title'>{item?.title ?? 'Untitled Test'}</div>
+      <div className='title'>{item?.title ?? 'Untitled Set'}</div>
 
-      <div className='test-meta'>
+      <div className='meta'>
         <span className='meta-chip'>
           <ClockCircleOutlined /> {minutes} phút
         </span>
@@ -38,13 +38,13 @@ const TestCard = ({ item }) => {
         </span>
       </div>
 
-      <div className='test-tags'>
+      <div className='tags'>
         {item?.tags?.map((t) => (
           <span key={t} className='tag'>#{t}</span>
         ))}
       </div>
 
-      <div className='test-footer'>
+      <div className='footer'>
         <div className='stats'>
           <span className='meta-chip'>
             <TeamOutlined /> {item?.stats?.users ?? 0}
@@ -63,4 +63,4 @@ const TestCard = ({ item }) => {
   )
 }
 
-export default TestCard
+export default PracticeCard

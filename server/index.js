@@ -6,6 +6,7 @@ import connectDB from "./utils/connectDB.js";
 import cookieParser from "cookie-parser";
 import fileUpload from "express-fileupload";
 import userRouter from "./routes/user.route.js";
+import toeicRouter from "./routes/toeic.route.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(cookieParser());
 app.use(fileUpload());
 
 app.use('/user', userRouter)
+app.use('/toeic', toeicRouter);
 
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
