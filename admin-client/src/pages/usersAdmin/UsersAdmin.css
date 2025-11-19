@@ -1,0 +1,8 @@
+.users-page h2 {
+  margin-bottom: 16px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+}

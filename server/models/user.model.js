@@ -25,7 +25,12 @@ const userSchema = new Schema(
     points: {
       type: Number,
       default: 0,
-    } 
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    }, 
   },
   { timestamps: true }
 );

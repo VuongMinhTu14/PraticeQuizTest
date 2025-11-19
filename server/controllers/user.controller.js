@@ -33,10 +33,11 @@ export const register = async (req, res) => {
       displayName,
       email,
       hashedPassword,
-      points: 50
+      points: 50,
+      role: req.body.role || "user",
     });
 
-    const token = signToken({ id: newUser._id, email: newUser.email });
+    const token = signToken({ id: newUser._id, email: newUser.email, role: newUser.role });
 
     res.status(201).json({
       ok: true,
@@ -77,7 +78,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ ok: false, msg: "Mật khẩu không đúng" });
     }
 
-    const token = signToken({ id: user._id, email: user.email });
+    const token = signToken({ id: user._id, email: user.email, role: user.role });
 
     res.json({
       ok: true,
@@ -88,7 +89,8 @@ export const login = async (req, res) => {
         displayName: user.displayName,
         email: user.email,
         profileImage: user.profileImage,
-        points: user.points
+        points: user.points,
+        role: user.role,
       },
       token,
     });

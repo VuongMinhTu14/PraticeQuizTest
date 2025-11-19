@@ -1,7 +1,7 @@
 import './practice.css'
 import { useEffect, useState } from 'react'
 import PracticeCard from '../../components/practiceCard/practiceCard'
-import { getToeicSets } from '../../utils/toeicApi.js'
+import { createToeicAttempt, getToeicSets } from '../../utils/toeicApi.js'
 
 const Practice = () => {
   const [items, setItems] = useState([])

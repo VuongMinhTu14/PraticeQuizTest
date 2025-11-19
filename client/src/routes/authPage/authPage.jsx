@@ -70,7 +70,7 @@ const AuthPage = () => {
                 <input id="username" name="username" type="text" placeholder="Username" required />
               </div>
               <div className="pq-auth__group">
-                <label htmlFor="displayName">Name</label>
+                <label htmlFor="displayName">Display Name</label>
                 <input id="displayName" name="displayName" type="text" placeholder="Name" required />
               </div>
               <div className="pq-auth__group">
