@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./ToeicQuestionsAdmin.css";
 import {
   Table,
   Select,
@@ -202,41 +203,60 @@ const ToeicQuestionsAdmin = () => {
   };
 
   const parseCsv = (text) => {
-    const lines = text
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l);
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith("#")); // cho phép comment bắt đầu bằng #
 
-    const questions = [];
+  const questions = [];
 
-    for (const line of lines) {
-      const parts = line.split(";").map((x) => x.trim());
+  for (const line of lines) {
+    const parts = line.split(";").map((x) => x.trim());
 
-      if (parts.length < 7) continue;
+    // tối thiểu phải có 7 cột: number;question;A;B;C;D;correct
+    if (parts.length < 7) continue;
 
-      const [numStr, qText, a, b, c, d, correct] = parts;
-      const number = Number(numStr) || 0;
-      const correctUpper = (correct || "").toUpperCase();
+    const [
+      numStr,
+      qText,
+      a,
+      b,
+      c,
+      d,
+      correct,
+      imageUrl = "",
+      audioUrl = "",
+      passageId = "",
+      explanation = "",
+    ] = parts;
 
-      if (!number || !qText) continue;
+    const number = Number(numStr) || 0;
+    const correctUpper = (correct || "").toUpperCase();
 
-      questions.push({
-        number,
-        questionText: qText,
-        choices: [
-          { label: "A", text: a },
-          { label: "B", text: b },
-          { label: "C", text: c },
-          { label: "D", text: d },
-        ],
-        correctOption: ["A", "B", "C", "D"].includes(correctUpper)
-          ? correctUpper
-          : "A",
+    if (!number || !qText) continue;
+
+    questions.push({
+      number,
+      questionText: qText,
+      choices: [
+        { label: "A", text: a },
+        { label: "B", text: b },
+        { label: "C", text: c },
+        { label: "D", text: d },
+      ],
+      correctOption: ["A", "B", "C", "D"].includes(correctUpper)
+        ? correctUpper
+        : "A",
+      imageUrl: imageUrl || undefined,
+      audioUrl: audioUrl || undefined,
+      passageId: passageId || undefined,
+      explanation: explanation || undefined,
       });
     }
 
     return questions;
   };
+
 
   const handleImportOk = async () => {
     if (!setId) {
@@ -441,12 +461,18 @@ const ToeicQuestionsAdmin = () => {
         <p style={{ marginBottom: 8 }}>
           <b>JSON:</b> dán mảng câu hỏi giống cấu trúc backend đang dùng.
           <br />
-          <b>CSV:</b> mỗi dòng:
-          <code> number;question;A;B;C;D;correct </code>
-          (ví dụ:
-          <code>1;What is he doing?;Working;Eating;Driving;Running;A</code>)
+          <b>CSV (đề xuất):</b>{" "}
+          <code>
+            number;question;A;B;C;D;correct;imageUrl;audioUrl;passageId;explanation
+          </code>
+          <br />
+          Ví dụ:{" "}
+          <code>
+            1;What is he doing?;Working;Eating;Driving;Running;A;/img1.jpg;/audio1.mp3;G1;Ghi
+            chú...
+          </code>
         </p>
-
+        
         <TextArea
           rows={10}
           value={importText}

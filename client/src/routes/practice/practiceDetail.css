@@ -175,3 +175,123 @@ body[data-theme="dark"] .tag {
 .btn-start:not(:disabled):hover {
   opacity: .95;
 }
+
+/* ----- Kết quả lần làm gần nhất trên trang PracticeDetail ----- */
+.attempt-summary {
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  background: #f0f9ff;
+  border: 1px solid #bfdbfe;
+}
+
+body[data-theme="dark"] .attempt-summary {
+  background: #020617;
+  border-color: #1d4ed8;
+}
+
+.attempt-summary__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.attempt-summary__score {
+  color: #2563eb;
+}
+
+.attempt-summary__parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attempt-summary__part {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  font-size: 13px;
+}
+
+.result-latest-box {
+  margin-top: 32px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.result-latest-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.result-summary {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.result-table th {
+  text-align: left;
+  background: #f5f7fa;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 1px solid #e6e9ef;
+}
+
+.result-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f2f5;
+  font-size: 15px;
+}
+
+.result-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Tô màu part */
+.part-badge {
+  display: inline-block;
+  background: #e8f0ff;
+  color: #2d6cdf;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Nút quay lại */
+.btn-back {
+  margin-bottom: 14px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-back:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="dark"] .btn-back {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+body[data-theme="dark"] .btn-back:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+
+

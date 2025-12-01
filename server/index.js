@@ -8,6 +8,7 @@ import fileUpload from "express-fileupload";
 import userRouter from "./routes/user.route.js";
 import toeicRouter from "./routes/toeic.route.js";
 import adminRouter from "./routes/admin.route.js";
+import toeicWritingRouter from "./routes/toeicWriting.route.js";
 
 const app = express();
 
@@ -23,7 +24,8 @@ app.use(fileUpload());
 
 app.use('/user', userRouter)
 app.use('/toeic', toeicRouter);
-app.use("/admin", adminRouter); 
+app.use("/admin", adminRouter);
+app.use("/toeic-writing", toeicWritingRouter); 
 
 app.use((err, req, res, next) => {
   console.error("Server error:", err);

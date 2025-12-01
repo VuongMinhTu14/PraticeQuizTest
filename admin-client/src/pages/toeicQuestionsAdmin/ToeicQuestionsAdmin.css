@@ -1,12 +1,51 @@
-.questions-header {
+/* ToeicQuestionsAdmin.css */
+
+.page-container {
+  padding: 24px 32px;
+}
+
+/* header trên cùng */
+.page-header {
+  margin-bottom: 16px;
+}
+
+.qh-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 12px;
 }
 
-.filters {
+.qh-title-row h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* cụm 2 nút bên phải */
+.qh-actions {
   display: flex;
   gap: 8px;
 }
 
+/* hàng filter: select đề + select part */
+.qh-filters {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* bảng cho gọn hơn chút */
+.ant-table {
+  background: #fff;
+}
+
+.ant-table-thead > tr > th {
+  font-weight: 600;
+}
+
+/* căn nội dung cột “Nội dung” đỡ sát lề */
+.ant-table-cell {
+  font-size: 14px;
+}

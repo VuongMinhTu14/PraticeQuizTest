@@ -2,6 +2,16 @@ import ToeicSet from "../models/toeicSet.model.js";
 import ToeicAttempt from "../models/toeicAttempt.model.js";
 import ToeicQuestion from "../models/toeicQuestion.model.js";
 
+const DEFAULT_PARTS = [
+  { key: "p1", name: "Part 1 - Photos",              questions: 6, tags: [], order: 1 },
+  { key: "p2", name: "Part 2 - Question-Response",    questions: 25, tags: [], order: 2 },
+  { key: "p3", name: "Part 3 - Conversations",        questions: 39, tags: [], order: 3 },
+  { key: "p4", name: "Part 4 - Talks",                questions: 30, tags: [], order: 4 },
+  { key: "p5", name: "Part 5 - Incomplete Sentences", questions: 30, tags: [], order: 5 },
+  { key: "p6", name: "Part 6 - Text Completion",      questions: 16, tags: [], order: 6 },
+  { key: "p7", name: "Part 7 - Reading",              questions: 54, tags: [], order: 7 }
+];
+
 // GET /toeic/sets
 export const listSets = async (req, res) => {
   try {
@@ -82,6 +92,7 @@ export const createAttempt = async (req, res) => {
   }
 };
 
+// GET /toeic/attempts/:id
 export const getAttempt = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,6 +121,12 @@ export const getAttempt = async (req, res) => {
         selectedParts: att.selectedParts,
         timeLimitSec: att.timeLimitSec,
         startedAt: att.createdAt,
+
+        // thêm để FE biết attempt đã nộp chưa & kết quả
+        status: att.status,
+        scoreRaw: att.scoreRaw,
+        scorePercent: att.scorePercent,
+        scoreByPart: att.scoreByPart,
       },
     });
   } catch (err) {
@@ -117,6 +134,158 @@ export const getAttempt = async (req, res) => {
     res.status(500).json({ ok: false, msg: "Server error" });
   }
 };
+
+export const getToeicLastAttempt = async (req, res) => {
+  try {
+    const { id } = req.params;        // setId
+    const userId = req.user.id;
+
+    const last = await ToeicAttempt.findOne({
+      setId: id,
+      userId,
+      status: "submitted",
+    })
+      .sort({ submittedAt: -1 })
+      .lean();
+
+    if (!last) {
+      return res.json({ ok: true, data: null });    
+    }
+
+    res.json({
+      ok: true,
+      data: {
+        setId: last.setId,
+        scoreRaw: last.scoreRaw,
+        scorePercent: last.scorePercent,
+        scoreByPart: last.scoreByPart,
+        totalQuestions: last.answers.length,
+      },
+    });
+  } catch (err) {
+    console.error("getToeicLastAttempt error:", err);
+    res.status(500).json({ ok: false, msg: "Server error" });
+  }
+};
+
+// POST /toeic/attempts/:id/submit
+export const submitAttempt = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { answers } = req.body || []; // answers = [{ questionId, selectedOption }]
+
+    const att = await ToeicAttempt.findById(id);
+    if (!att) {
+      return res
+        .status(404)
+        .json({ ok: false, msg: "Không tìm thấy attempt" });
+    }
+
+    // đảm bảo chỉ chủ nhân được nộp bài (nếu có verifyToken)
+    if (req.user && att.userId !== req.user.id) {
+      return res
+        .status(403)
+        .json({ ok: false, msg: "Không có quyền nộp bài này" });
+    }
+
+    // lấy tất cả câu hỏi thuộc set + các part đã chọn
+    const questions = await ToeicQuestion.find({
+      setId: att.setId,
+      partKey: { $in: att.selectedParts },
+    }).lean();
+
+    const qMap = new Map();
+    questions.forEach((q) => {
+      qMap.set(String(q._id), q);
+    });
+
+    // --------- CHẤM ĐIỂM ----------
+    const partStats = {}; // { p1: { correct, total }, ... }
+    let correctCount = 0;
+
+    const normalizedAnswers = (answers || [])
+      .map((a) => {
+        const q = qMap.get(String(a.questionId));
+        if (!q) return null;
+
+        const isCorrect = a.selectedOption === q.correctOption;
+
+        if (!partStats[q.partKey]) {
+          partStats[q.partKey] = { correct: 0, total: 0 };
+        }
+        partStats[q.partKey].total += 1;
+        if (isCorrect) {
+          partStats[q.partKey].correct += 1;
+          correctCount += 1;
+        }
+
+        return {
+          questionId: q._id,
+          selectedOption: a.selectedOption,
+          isCorrect,
+          partKey: q.partKey,
+        };
+      })
+      .filter(Boolean);
+
+    // tổng số câu của bài (dùng số câu hỏi thực tế đã gửi về)
+    const totalQuestions = questions.length;
+    const totalCorrect = correctCount;
+    const scoreRaw = totalCorrect;
+    const scorePercent =
+      totalQuestions > 0
+        ? Math.round((totalCorrect / totalQuestions) * 100)
+        : 0;
+
+    const scoreByPart = Object.entries(partStats).map(([partKey, s]) => ({
+      partKey,
+      correct: s.correct,
+      total: s.total,
+      percent: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
+    }));
+
+    // xác định mode: full test hay luyện theo part
+    const selectedParts = att.selectedParts || [];
+    const isFullTest =
+      selectedParts.length >= 7 || // tuỳ bạn định nghĩa bao nhiêu part là full
+      Object.keys(partStats).length >= 7;
+
+    // --------- CẬP NHẬT ATTEMPT ----------
+    att.answers = normalizedAnswers;
+    att.scoreByPart = scoreByPart;
+    att.status = "submitted";
+    att.submittedAt = new Date();
+    att.scoreRaw = scoreRaw;
+    att.scorePercent = scorePercent;
+
+    // các field mới để dashboard dùng
+    att.totalQuestions = totalQuestions;
+    att.totalCorrect = totalCorrect;
+    att.mode = isFullTest ? "full" : "parts";
+
+    await att.save();
+
+    // trả kết quả về FE
+    res.json({
+      ok: true,
+      data: {
+        attemptId: att._id.toString(),
+        setId: att.setId,
+        mode: att.mode,
+        selectedParts: att.selectedParts,
+        totalQuestions,
+        totalCorrect,
+        scoreRaw,
+        scorePercent,
+        scoreByPart,
+      },
+    });
+  } catch (err) {
+    console.error("submitAttempt error:", err);
+    res.status(500).json({ ok: false, msg: "Server error" });
+  }
+};
+
 
 // ====== ADMIN: list tất cả bộ đề ======
 export const adminListSets = async (req, res) => {
@@ -143,17 +312,19 @@ export const adminListSets = async (req, res) => {
   }
 };
 
-// ví dụ trong admin.controller.js hoặc toeic.admin.controller.js
+// ====== ADMIN: tạo bộ đề mới ======
 export const adminCreateSet = async (req, res) => {
   try {
-    const { _id, title, durationSec, totalQuestions, isFree, status } = req.body;
+    const { _id, title, durationSec, totalQuestions, isFree, status, parts } = req.body;
 
-    if (!_id)
+    if (!_id) {
       return res.status(400).json({ ok: false, msg: "Mã đề (_id) là bắt buộc" });
+    }
 
     const existed = await ToeicSet.findById(_id);
-    if (existed)
+    if (existed) {
       return res.status(400).json({ ok: false, msg: "Mã đề đã tồn tại" });
+    }
 
     const doc = await ToeicSet.create({
       _id,
@@ -162,16 +333,17 @@ export const adminCreateSet = async (req, res) => {
       totalQuestions,
       isFree,
       status,
-      parts: [],
+      parts: (Array.isArray(parts) && parts.length > 0) ? parts : DEFAULT_PARTS,
       stats: { attempts: 0, comments: 0 }
     });
 
     res.status(201).json({ ok: true, data: { id: doc._id } });
   } catch (err) {
     console.error("adminCreateSet error:", err);
-    res.status(500).json({ ok: false, msg: "Server error" });
+    res.status(500).json({ ok: false, msg: "Lỗi server" });
   }
 };
+
 
 
 // ====== ADMIN: update bộ đề ======
@@ -444,3 +616,44 @@ export const listQuestionsForUser = async (req, res) => {
     res.status(500).json({ ok: false, msg: "Server error" });
   }
 };
+
+// GET /toeic/my/recent-attempts?days=30
+export const getMyToeicRecentAttempts = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ ok: false, msg: "Chưa đăng nhập" });
+    }
+
+    const days = parseInt(req.query.days || "30", 10);
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+
+    const attempts = await ToeicAttempt.find({
+      userId,
+      createdAt: { $gte: from },
+      status: "submitted",
+    })
+      .sort({ createdAt: 1 })
+      .populate("setId", "title");
+
+    const items = attempts.map((a) => ({
+      id: a._id.toString(),
+      setId: a.setId._id || a.setId,
+      setTitle: a.setId.title,
+      mode: a.mode,
+      totalScore: a.scorePercent ?? null,        // % đúng
+      totalCorrect: a.totalCorrect ?? null,      // số câu đúng
+      totalQuestions: a.totalQuestions ?? null,  // tổng câu
+      createdAt: a.createdAt,
+    }));
+
+    return res.json({ ok: true, items });
+  } catch (err) {
+    console.error("getMyToeicRecentAttempts error:", err);
+    return res.status(500).json({ ok: false, msg: "Lỗi lấy lịch sử TOEIC" });
+  }
+};
+
+
+

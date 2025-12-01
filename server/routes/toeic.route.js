@@ -3,7 +3,9 @@ import {
   listSets,
   getSet,
   createAttempt,
-  getAttempt, 
+  getAttempt,
+  submitAttempt,
+  getToeicLastAttempt,
   adminListSets,
   adminCreateSet,
   adminUpdateSet,
@@ -14,6 +16,7 @@ import {
   adminDeleteQuestion,
   adminImportQuestions,
   listQuestionsForUser,
+  getMyToeicRecentAttempts,
 } 
 from "../controllers/toeic.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
@@ -24,6 +27,9 @@ router.get("/sets", listSets);
 router.get("/sets/:id", getSet);
 router.get("/attempts/:id", getAttempt); 
 router.post("/sets/:id/attempts", verifyToken, createAttempt);
+router.post("/attempts/:id/submit", verifyToken, submitAttempt);
+router.get("/sets/:id/last-attempt", verifyToken, getToeicLastAttempt);
+router.get("/my/recent-attempts", verifyToken, getMyToeicRecentAttempts);
 
 //ADMIN
 router.get("/admin/sets", adminListSets);

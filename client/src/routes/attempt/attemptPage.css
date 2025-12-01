@@ -176,3 +176,88 @@
   transform: translateY(0);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.4);
 }
+
+.attempt-page {
+  padding: 24px 32px;
+}
+
+.attempt-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.attempt-meta {
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.attempt-result {
+  margin: 16px 0 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #f3f4ff;
+}
+
+.result-table {
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.result-table th,
+.result-table td {
+  padding: 4px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.attempt-question-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.attempt-question {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.q-header {
+  margin-bottom: 4px;
+}
+
+.q-text {
+  margin-bottom: 8px;
+}
+
+.q-options .ant-radio-wrapper {
+  display: block;
+  margin: 2px 0;
+}
+
+.attempt-actions {
+  margin-top: 24px;
+}
+
+/* nút quay lại */
+.btn-back {
+  margin-bottom: 14px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-back:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+body[data-theme="dark"] .btn-back {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+body[data-theme="dark"] .btn-back:hover {
+  background: rgba(255, 255, 255, 0.08);
+}

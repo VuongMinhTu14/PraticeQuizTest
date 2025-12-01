@@ -141,3 +141,34 @@ export const createToeicQuestionAdmin = async (setId, partKey, payload) => {
   return res.data;
 };
 
+// Lấy danh sách tất cả đề writing (draft + published)
+export const adminListWritingSets = async () => {
+  const res = await api.get("/toeic-writing/admin/sets");
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy danh sách đề writing");
+  return data.items;
+};
+
+// Tạo đề writing mới
+export const adminCreateWritingSet = async (payload) => {
+  const res = await api.post("/toeic-writing/admin/sets", payload);
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Tạo đề writing thất bại");
+  return data.data; // { id: ... }
+};
+
+// Cập nhật đề writing
+export const adminUpdateWritingSet = async (id, payload) => {
+  const res = await api.put(`/toeic-writing/admin/sets/${id}`, payload);
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Cập nhật đề writing thất bại");
+  return data.data;
+};
+
+// Xoá đề writing
+export const adminDeleteWritingSet = async (id) => {
+  const res = await api.delete(`/toeic-writing/admin/sets/${id}`);
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Xoá đề writing thất bại");
+  return true;
+};

@@ -26,7 +26,8 @@ const LeftBar = () => {
   }, [mode]);
 
   const selectedKey = useMemo(() => {
-    if (location.pathname.startsWith("/practice")) return "practice";
+    if (location.pathname.startsWith("/practice/writing")) return "practice-writing";
+    if (location.pathname.startsWith("/practice")) return "practice-mcq";
     if (location.pathname.startsWith("/game")) return "game";
     return "dashboard";
   }, [location.pathname]);
@@ -35,9 +36,12 @@ const LeftBar = () => {
     if (key === "dashboard") {
       setMode("light");
       nav("/");
-    } else if (key === "practice") {
+    } else if (key === "practice-mcq") {
       setMode("light");
       nav("/practice");
+    } else if (key === "practice-writing") {
+      setMode("light");
+      nav("/practice/writing");
     } else if (key === "game") {
       setMode("dark");
       nav("/game");
@@ -76,7 +80,16 @@ const LeftBar = () => {
         className="leftbar-menu"
         items={[
           { key: "dashboard", icon: <HomeOutlined />, label: "Dashboard" },
-          { key: "practice", icon: <ReadOutlined />, label: "Practice" },
+          {
+            key: "practice-group",
+            icon: <ReadOutlined />,
+            label: "Practice",
+            children: [
+              { key: "practice-mcq", label: "Trắc nghiệm TOEIC" },
+              { key: "practice-writing", label: "Practice Writing" },
+            ],
+          },
+
           { key: "game", icon: <RocketOutlined />, label: "Game" },
         ]}
       />

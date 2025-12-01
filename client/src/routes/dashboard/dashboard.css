@@ -53,3 +53,11 @@
 /* chấm điều hướng nhẹ nhàng */
 .custom-dots li button{ background: rgba(255,255,255,.5); }
 .custom-dots li.slick-active button{ background: #0000; }
+
+.dashboard-stats {
+  margin-top: 32px;
+}
+
+.stats-card {
+  margin-bottom: 16px;
+}

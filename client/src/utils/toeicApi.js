@@ -32,3 +32,76 @@ export const getToeicAttempt = async (attemptId) => {
 
   return res.data.data; // { id, setId, setTitle, selectedParts, timeLimitSec, ... }
 };
+
+export const submitToeicAttempt = async (attemptId, answers) => {
+  const res = await apiRequest.post(`/toeic/attempts/${attemptId}/submit`, {
+    answers, // [{ questionId, selectedOption }]
+  });
+
+  return res.data; // { ok, data }
+};
+
+export const getToeicLastResult = async (setId) => {
+  const res = await apiRequest.get(`/toeic/sets/${setId}/last-attempt`);
+  // res.data: { ok, data }
+  return res.data;
+};
+
+export const listWritingSets = async () => {
+  const res = await apiRequest.get("/toeic-writing/sets");
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy danh sách đề writing");
+  return data.items || [];
+};
+
+export const getWritingSet = async (id) => {
+  const res = await apiRequest.get(`/toeic-writing/sets/${id}`);
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy đề writing");
+  return data.data;
+};
+
+export const createWritingAttemptUser = async (setId, answerText) => {
+  const res = await apiRequest.post(`/toeic-writing/sets/${setId}/attempts`, {
+    answerText,
+  });
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi chấm điểm bài writing");
+  return data.data; // attempt vừa tạo
+};
+
+export const getWritingLastAttempt = async (setId) => {
+  try {
+    const res = await apiRequest.get(
+      `/toeic-writing/sets/${setId}/last-attempt`
+    );
+    const data = res.data;
+    if (!data.ok) throw new Error(data.msg || "Lỗi lấy attempt gần nhất");
+    return data.data; // có thể null
+  } catch (err) {
+    // Nếu chưa login / token hết hạn → coi như chưa có attempt
+    const status = err?.response?.status;
+    if (status === 401) {
+      return null;
+    }
+    throw err;
+  }
+};
+
+// GET /toeic/my/recent-attempts?days=30
+export const getMyToeicRecentAttempts = async (days = 30) => {
+  const res = await apiRequest.get(`/toeic/my/recent-attempts?days=${days}`);
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy lịch sử TOEIC");
+  return data.items;
+};
+
+// Writing history
+export const getMyWritingRecentAttempts = async (days = 30) => {
+  const res = await apiRequest.get(`/toeic-writing/my/recent-attempts`, {
+    params: { days },
+  });
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy lịch sử Writing");
+  return data.items;
+};

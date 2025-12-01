@@ -12,7 +12,8 @@ const PracticeDetail = React.lazy(() => import("./routes/practice/practiceDetail
 const AttemptPage = React.lazy(() => import("./routes/attempt/attemptPage"));
 const Game = React.lazy(() => import("./routes/game/game"));
 const AuthPage = React.lazy(() => import("./routes/authPage/authPage"));
-
+const PracticeWriting = React.lazy(() => import("./routes/practice/practiceWriting"));
+const PracticeWritingDetail = React.lazy(() => import("./routes/practice/practiceWritingDetail"));
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
@@ -25,6 +26,8 @@ createRoot(document.getElementById("root")).render(
               <Route path='/' element={<Dashboard />} />
               <Route path='/practice' element={<Practice />} />
               <Route path="/practice/:id" element={<PracticeDetail />} />
+              <Route path='/practice/writing' element={<PracticeWriting />} />
+              <Route path='/practice/writing/:id' element={<PracticeWritingDetail />} />
               <Route path="/attempt/:attemptId" element={<AttemptPage  />} />
               <Route path='/game' element={<Game />} />
             </Route>

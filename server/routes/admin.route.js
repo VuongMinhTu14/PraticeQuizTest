@@ -5,7 +5,6 @@ import { listUsers, updateUser, deleteUser } from "../controllers/admin.controll
 
 const router = Router();
 
-// Tạm thời tắt verifyToken cho dễ test, sau hẵng bật
 router.get("/users", /* verifyToken, */ listUsers);
 router.patch("/users/:id", /* verifyToken, */ updateUser);
 router.delete("/users/:id", /* verifyToken, */ deleteUser);

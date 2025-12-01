@@ -1,66 +1,123 @@
+// src/routes/attempt/AttemptPage.jsx
 import "./attemptPage.css";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { message } from "antd";
-import { getToeicQuestions, getToeicAttempt } from "../../utils/toeicApi";
+import { useParams, useNavigate } from "react-router-dom";
+import { message, Radio, Button, Modal } from "antd";
+import {
+  getToeicAttempt,
+  getToeicQuestions,
+  submitToeicAttempt,
+} from "../../utils/toeicApi";
 
 const AttemptPage = () => {
   const { attemptId } = useParams();
+  const navigate = useNavigate();
+  const [msgApi, contextHolder] = message.useMessage();
+
   const [loading, setLoading] = useState(true);
   const [questions, setQuestions] = useState([]);
   const [meta, setMeta] = useState(null);
-  const [answers, setAnswers] = useState({});
-  const [msgApi, contextHolder] = message.useMessage();
 
+  // answers: { questionId: "A" }
+  const [answers, setAnswers] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  // ============================================
+  // LOAD ATTEMPT + QUESTIONS
+  // ============================================
   useEffect(() => {
     let alive = true;
 
     const load = async () => {
       try {
         setLoading(true);
+
+        // lấy metadata attempt
         const at = await getToeicAttempt(attemptId);
         if (!alive) return;
         setMeta(at);
 
-        const allQuestions = [];
-        for (const partKey of at.selectedParts) {
-          const qs = await getToeicQuestions(at.setId, partKey);
-          allQuestions.push(...qs);
+        // load toàn bộ câu hỏi của từng part đã chọn
+        const all = [];
+        for (const p of at.selectedParts) {
+          const qs = await getToeicQuestions(at.setId, p);
+          if (Array.isArray(qs)) all.push(...qs);
         }
 
         if (!alive) return;
-        setQuestions(allQuestions);
+        setQuestions(all);
       } catch (err) {
-        console.error(err);
-        if (alive) msgApi.error("Không tải được câu hỏi cho bài luyện");
+        console.error("load attempt error:", err);
+        if (alive) msgApi.error("Không tải được thông tin bài luyện");
       } finally {
         if (alive) setLoading(false);
       }
     };
 
     load();
-    return () => {
-      alive = false;
-    };
+    return () => (alive = false);
   }, [attemptId, msgApi]);
 
-  const handleChoose = (questionId, optionLabel) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: optionLabel,
-    }));
+  // chọn đáp án
+  const onSelectAnswer = (questionId, option) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: option }));
   };
 
+  // ============================================
+  // SUBMIT
+  // ============================================
   const handleSubmit = () => {
-    console.log("USER ANSWERS:", answers);
-    msgApi.info("Đáp án đã được lưu tạm (demo, chưa chấm điểm).");
+    if (!questions.length) return;
+
+    Modal.confirm({
+      title: "Nộp bài?",
+      content: "Sau khi nộp sẽ không chỉnh sửa được đáp án.",
+      okText: "Nộp bài",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          setSubmitting(true);
+
+          const payloadAnswers = questions
+            .map((q) => ({
+              questionId: q.id,
+              selectedOption: answers[q.id] || null,
+            }))
+            .filter((a) => !!a.selectedOption);
+
+          const res = await submitToeicAttempt(attemptId, payloadAnswers);
+
+          if (!res?.ok) {
+            msgApi.error(res?.msg || "Nộp bài thất bại");
+            return;
+          }
+
+          const result = res.data; // { setId, scoreRaw, ... }
+
+          msgApi.success("Nộp bài thành công!");
+
+          // chuyển về trang practice detail
+          navigate(`/practice/${result.setId}`, {
+            state: { lastResult: result },
+          });
+        } catch (err) {
+          console.error("submit attempt error:", err);
+          msgApi.error("Không nộp được bài, thử lại sau");
+        } finally {
+          setSubmitting(false);
+        }
+      },
+    });
   };
 
+  // ============================================
+  // RENDER
+  // ============================================
   if (loading) {
     return (
       <div className="attempt-page">
         {contextHolder}
-        <p>Đang tải câu hỏi...</p>
+        <p>Đang tải bài luyện...</p>
       </div>
     );
   }
@@ -78,70 +135,62 @@ const AttemptPage = () => {
     <div className="attempt-page">
       {contextHolder}
 
-      <header className="attempt-header">
-        <div className="attempt-title">Bài luyện TOEIC</div>
-        {meta && (
-          <div className="attempt-meta">
-            <span>Đề: {meta.setTitle || meta.setId}</span>
-            <span>•</span>
-            <span>Phần: {meta.selectedParts.join(", ")}</span>
-          </div>
-        )}
-      </header>
+      {/* nút quay lại */}
+      <button
+        type="button"
+        className="btn-back"
+        onClick={() => navigate(-1)}
+      >
+        ← Quay lại
+      </button>
 
-      <main className="attempt-content">
-        <ol className="question-list">
-          {questions.map((q) => {
-            const selected = answers[q.id];
-            return (
-              <li key={q.id} className="question-card">
-                <div className="question-header">
-                  <div className="question-number">
-                    Câu {q.number}{" "}
-                    <span className="question-part">({q.partKey})</span>
-                  </div>
-                  {q.passageId && (
-                    <div className="question-badge">
-                      Passage: {q.passageId}
-                    </div>
-                  )}
-                </div>
+      <h1 className="attempt-title">Bài luyện TOEIC</h1>
 
-                <div className="question-text">{q.questionText}</div>
+      {meta && (
+        <p className="attempt-meta">
+          Đề: <b>{meta.setTitle}</b> · Phần:{" "}
+          {meta.selectedParts?.join(", ")} · Thời gian:{" "}
+          {Math.round((meta.durationSec ?? 0) / 60)} phút
+        </p>
+      )}
 
-                <ul className="option-list">
-                  {q.choices?.map((c) => {
-                    const isSelected = selected === c.label;
-                    return (
-                      <li
-                        key={c.label}
-                        className={`option-item ${
-                          isSelected ? "selected" : ""
-                        }`}
-                        onClick={() => handleChoose(q.id, c.label)}
-                      >
-                        <div className="option-radio">
-                          <span className="circle">
-                            {isSelected && <span className="dot" />}
-                          </span>
-                          <span className="option-label">{c.label}</span>
-                        </div>
-                        <div className="option-text">{c.text}</div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
-            );
-          })}
-        </ol>
-      </main>
+      {/* DANH SÁCH CÂU HỎI */}
+      <ol className="attempt-question-list">
+        {questions.map((q) => (
+          <li key={q.id} className="attempt-question">
+            <div className="q-header">
+              <b>
+                Câu {q.number}: ({q.partKey.toUpperCase()})
+              </b>
+            </div>
 
-      <footer className="attempt-footer">
-        <button className="submit-btn" onClick={handleSubmit}>
-          Nộp bài (demo)
-        </button>
-      </footer>
+            <div className="q-text">{q.questionText}</div>
+
+            <Radio.Group
+              value={answers[q.id]}
+              onChange={(e) => onSelectAnswer(q.id, e.target.value)}
+              className="q-options"
+            >
+              {q.choices?.map((c) => (
+                <Radio key={c.label} value={c.label} className="q-option">
+                  <b>{c.label}.</b> {c.text}
+                </Radio>
+              ))}
+            </Radio.Group>
+          </li>
+        ))}
+      </ol>
+
+      <div className="attempt-actions">
+        <Button
+          type="primary"
+          size="large"
+          onClick={handleSubmit}
+          loading={submitting}
+        >
+          {submitting ? "Đang nộp..." : "Nộp bài"}
+        </Button>
+      </div>
     </div>
   );
 };

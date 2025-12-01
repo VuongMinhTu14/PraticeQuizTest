@@ -1,0 +1,184 @@
+.practice-writing-page {
+  padding: 32px 40px;
+}
+
+.writing-header {
+  margin-bottom: 24px;
+}
+
+.writing-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.writing-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+}
+
+.badge-year {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.writing-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.prompt-text {
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+.word-require {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.word-count {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.answer-textarea {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 12px 14px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.answer-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+.answer-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-primary {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 22px;
+  background: #2563eb;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hint-text {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.writing-result .result-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+  gap: 16px;
+}
+
+.overall-score {
+  margin-bottom: 12px;
+}
+
+.overall-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.overall-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.result-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.result-label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.result-value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.feedback-card {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.feedback-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feedback-text {
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+@media (max-width: 900px) {
+  .writing-result .result-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
