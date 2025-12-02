@@ -17,6 +17,8 @@ import {
   adminImportQuestions,
   listQuestionsForUser,
   getMyToeicRecentAttempts,
+  adminUploadQuestionImage,
+  adminUploadQuestionAudio,
 } 
 from "../controllers/toeic.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
@@ -46,6 +48,8 @@ router.post("/admin/sets/:setId/questions/import", adminImportQuestions);
 
 //PUBLIC - QUESTIONS
 router.get("/sets/:id/questions", listQuestionsForUser);
+router.post("/admin/questions/:id/upload-image", adminUploadQuestionImage);
+router.post("/admin/questions/:id/upload-audio", adminUploadQuestionAudio);
 
 
 export default router;

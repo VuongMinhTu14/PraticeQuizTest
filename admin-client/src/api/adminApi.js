@@ -172,3 +172,25 @@ export const adminDeleteWritingSet = async (id) => {
   if (!data.ok) throw new Error(data.msg || "Xoá đề writing thất bại");
   return true;
 };
+
+export const uploadToeicQuestionImageAdmin = async (questionId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await api.post(
+    `/toeic/admin/questions/${questionId}/upload-image`,
+    formData
+  );
+  return res.data;
+};
+
+export const uploadToeicQuestionAudioAdmin = async (questionId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await api.post(
+    `/toeic/admin/questions/${questionId}/upload-audio`,
+    formData
+  );
+  return res.data; 
+};
+
+

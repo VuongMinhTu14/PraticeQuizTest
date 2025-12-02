@@ -1,3 +1,4 @@
+// src/utils/toeicApi.js
 import apiRequest from "./apiRequest";
 import axios from "axios";
 
@@ -10,17 +11,42 @@ export const getToeicSet = (id) =>
   apiRequest.get(`/toeic/sets/${id}`).then((res) => res.data.data);
 
 export const createToeicAttempt = (id, payload) =>
-  apiRequest.post(`/toeic/sets/${id}/attempts`, payload).then((res) => res.data);
+  apiRequest
+    .post(`/toeic/sets/${id}/attempts`, payload)
+    .then((res) => res.data);
 
+/**
+ * Lấy câu hỏi theo từng part (đang dùng cho mode luyện từng part)
+ * GET /toeic/sets/:setId/questions?part=p1
+ */
 export const getToeicQuestions = async (setId, partKey) => {
-  const res = await axios.get(
-    `${API_BASE}/toeic/sets/${setId}/questions`,
-    { params: { part: partKey } }
-  );
+  const res = await axios.get(`${API_BASE}/toeic/sets/${setId}/questions`, {
+    params: { part: partKey },
+  });
   if (!res.data.ok) throw new Error(res.data.msg || "Không tải được câu hỏi");
   return res.data.data || [];
 };
 
+/**
+ * Lấy TOÀN BỘ câu hỏi của 1 set (dùng cho FULLTEST)
+ * GET /toeic/sets/:setId/questions
+ */
+export const getToeicQuestionsOfSet = async (setId) => {
+  const res = await axios.get(`${API_BASE}/toeic/sets/${setId}/questions`, {
+    withCredentials: true, // gửi cookie nếu cần kiểm tra login/premium
+  });
+
+  if (!res.data.ok) {
+    throw new Error(res.data.msg || "Không tải được câu hỏi");
+  }
+
+  return res.data.data || [];
+};
+
+/**
+ * Lấy thông tin attempt (setId, selectedParts, timeLimitSec, ...)
+ * GET /toeic/attempts/:attemptId
+ */
 export const getToeicAttempt = async (attemptId) => {
   const res = await axios.get(`${API_BASE}/toeic/attempts/${attemptId}`, {
     withCredentials: true, // để gửi cookie token
@@ -32,6 +58,9 @@ export const getToeicAttempt = async (attemptId) => {
 
   return res.data.data; // { id, setId, setTitle, selectedParts, timeLimitSec, ... }
 };
+
+// alias cho tiện import ở chỗ khác (nếu muốn dùng tên rõ hơn)
+export const getToeicAttemptDetail = getToeicAttempt;
 
 export const submitToeicAttempt = async (attemptId, answers) => {
   const res = await apiRequest.post(`/toeic/attempts/${attemptId}/submit`, {
@@ -46,6 +75,8 @@ export const getToeicLastResult = async (setId) => {
   // res.data: { ok, data }
   return res.data;
 };
+
+// ==================== WRITING ====================
 
 export const listWritingSets = async () => {
   const res = await apiRequest.get("/toeic-writing/sets");

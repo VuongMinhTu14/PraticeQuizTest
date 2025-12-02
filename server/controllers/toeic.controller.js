@@ -1,9 +1,22 @@
 import ToeicSet from "../models/toeicSet.model.js";
 import ToeicAttempt from "../models/toeicAttempt.model.js";
 import ToeicQuestion from "../models/toeicQuestion.model.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Helper đảm bảo thư mục tồn tại
+const ensureDir = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
 
 const DEFAULT_PARTS = [
-  { key: "p1", name: "Part 1 - Photos",              questions: 6, tags: [], order: 1 },
+  { key: "p1", name: "Part 1 - Photos",              questions: 6,  tags: [], order: 1 },
   { key: "p2", name: "Part 2 - Question-Response",    questions: 25, tags: [], order: 2 },
   { key: "p3", name: "Part 3 - Conversations",        questions: 39, tags: [], order: 3 },
   { key: "p4", name: "Part 4 - Talks",                questions: 30, tags: [], order: 4 },
@@ -11,6 +24,10 @@ const DEFAULT_PARTS = [
   { key: "p6", name: "Part 6 - Text Completion",      questions: 16, tags: [], order: 6 },
   { key: "p7", name: "Part 7 - Reading",              questions: 54, tags: [], order: 7 }
 ];
+
+// =====================================
+// PUBLIC: LIST & DETAIL SET
+// =====================================
 
 // GET /toeic/sets
 export const listSets = async (req, res) => {
@@ -60,6 +77,10 @@ export const getSet = async (req, res) => {
     res.status(500).json({ ok: false, msg: "Server error" });
   }
 };
+
+// =====================================
+// ATTEMPT
+// =====================================
 
 // POST /toeic/sets/:id/attempts  (yêu cầu đăng nhập)
 export const createAttempt = async (req, res) => {
@@ -122,7 +143,6 @@ export const getAttempt = async (req, res) => {
         timeLimitSec: att.timeLimitSec,
         startedAt: att.createdAt,
 
-        // thêm để FE biết attempt đã nộp chưa & kết quả
         status: att.status,
         scoreRaw: att.scoreRaw,
         scorePercent: att.scorePercent,
@@ -181,14 +201,12 @@ export const submitAttempt = async (req, res) => {
         .json({ ok: false, msg: "Không tìm thấy attempt" });
     }
 
-    // đảm bảo chỉ chủ nhân được nộp bài (nếu có verifyToken)
     if (req.user && att.userId !== req.user.id) {
       return res
         .status(403)
         .json({ ok: false, msg: "Không có quyền nộp bài này" });
     }
 
-    // lấy tất cả câu hỏi thuộc set + các part đã chọn
     const questions = await ToeicQuestion.find({
       setId: att.setId,
       partKey: { $in: att.selectedParts },
@@ -199,7 +217,6 @@ export const submitAttempt = async (req, res) => {
       qMap.set(String(q._id), q);
     });
 
-    // --------- CHẤM ĐIỂM ----------
     const partStats = {}; // { p1: { correct, total }, ... }
     let correctCount = 0;
 
@@ -228,7 +245,6 @@ export const submitAttempt = async (req, res) => {
       })
       .filter(Boolean);
 
-    // tổng số câu của bài (dùng số câu hỏi thực tế đã gửi về)
     const totalQuestions = questions.length;
     const totalCorrect = correctCount;
     const scoreRaw = totalCorrect;
@@ -244,13 +260,11 @@ export const submitAttempt = async (req, res) => {
       percent: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
     }));
 
-    // xác định mode: full test hay luyện theo part
     const selectedParts = att.selectedParts || [];
     const isFullTest =
-      selectedParts.length >= 7 || // tuỳ bạn định nghĩa bao nhiêu part là full
+      selectedParts.length >= 7 ||
       Object.keys(partStats).length >= 7;
 
-    // --------- CẬP NHẬT ATTEMPT ----------
     att.answers = normalizedAnswers;
     att.scoreByPart = scoreByPart;
     att.status = "submitted";
@@ -258,14 +272,12 @@ export const submitAttempt = async (req, res) => {
     att.scoreRaw = scoreRaw;
     att.scorePercent = scorePercent;
 
-    // các field mới để dashboard dùng
     att.totalQuestions = totalQuestions;
     att.totalCorrect = totalCorrect;
     att.mode = isFullTest ? "full" : "parts";
 
     await att.save();
 
-    // trả kết quả về FE
     res.json({
       ok: true,
       data: {
@@ -286,8 +298,10 @@ export const submitAttempt = async (req, res) => {
   }
 };
 
+// =====================================
+// ADMIN: SETS
+// =====================================
 
-// ====== ADMIN: list tất cả bộ đề ======
 export const adminListSets = async (req, res) => {
   try {
     const items = await ToeicSet.find({}).sort({ createdAt: -1 });
@@ -312,10 +326,10 @@ export const adminListSets = async (req, res) => {
   }
 };
 
-// ====== ADMIN: tạo bộ đề mới ======
 export const adminCreateSet = async (req, res) => {
   try {
-    const { _id, title, durationSec, totalQuestions, isFree, status, parts } = req.body;
+    const { _id, title, durationSec, totalQuestions, isFree, status, parts } =
+      req.body;
 
     if (!_id) {
       return res.status(400).json({ ok: false, msg: "Mã đề (_id) là bắt buộc" });
@@ -333,8 +347,8 @@ export const adminCreateSet = async (req, res) => {
       totalQuestions,
       isFree,
       status,
-      parts: (Array.isArray(parts) && parts.length > 0) ? parts : DEFAULT_PARTS,
-      stats: { attempts: 0, comments: 0 }
+      parts: Array.isArray(parts) && parts.length > 0 ? parts : DEFAULT_PARTS,
+      stats: { attempts: 0, comments: 0 },
     });
 
     res.status(201).json({ ok: true, data: { id: doc._id } });
@@ -344,9 +358,6 @@ export const adminCreateSet = async (req, res) => {
   }
 };
 
-
-
-// ====== ADMIN: update bộ đề ======
 export const adminUpdateSet = async (req, res) => {
   try {
     const { id } = req.params;
@@ -384,7 +395,6 @@ export const adminUpdateSet = async (req, res) => {
   }
 };
 
-// ====== ADMIN: xóa bộ đề ======
 export const adminDeleteSet = async (req, res) => {
   try {
     const { id } = req.params;
@@ -399,7 +409,11 @@ export const adminDeleteSet = async (req, res) => {
   }
 };
 
-// ====== ADMIN: list câu hỏi theo set + part ======
+// =====================================
+// ADMIN: QUESTIONS
+// =====================================
+
+// list câu hỏi theo set + part
 export const adminListQuestions = async (req, res) => {
   try {
     const { setId } = req.params;
@@ -428,6 +442,8 @@ export const adminListQuestions = async (req, res) => {
       imageUrl: q.imageUrl,
       audioUrl: q.audioUrl,
       passageId: q.passageId,
+      passageOrder: q.passageOrder,
+      passageText: q.passageText,
     }));
 
     res.json({ ok: true, data: shaped });
@@ -437,7 +453,6 @@ export const adminListQuestions = async (req, res) => {
   }
 };
 
-// ====== ADMIN: tạo câu hỏi mới ======
 export const adminCreateQuestion = async (req, res) => {
   try {
     const { setId } = req.params;
@@ -451,6 +466,8 @@ export const adminCreateQuestion = async (req, res) => {
       imageUrl,
       audioUrl,
       passageId,
+      passageOrder,
+      passageText,
     } = req.body || {};
 
     if (!setId || !partKey || !number || !questionText || !correctOption) {
@@ -471,12 +488,13 @@ export const adminCreateQuestion = async (req, res) => {
       imageUrl,
       audioUrl,
       passageId,
+      passageOrder,
+      passageText,
     });
 
     res.status(201).json({ ok: true, data: { id: doc._id } });
   } catch (err) {
     console.error("adminCreateQuestion error:", err);
-    // duplicate key (trùng setId + partKey + number)
     if (err.code === 11000) {
       return res.status(409).json({
         ok: false,
@@ -487,7 +505,6 @@ export const adminCreateQuestion = async (req, res) => {
   }
 };
 
-// ====== ADMIN: update câu hỏi ======
 export const adminUpdateQuestion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -501,6 +518,8 @@ export const adminUpdateQuestion = async (req, res) => {
       imageUrl,
       audioUrl,
       passageId,
+      passageOrder,
+      passageText,
     } = req.body || {};
 
     const payload = {};
@@ -513,6 +532,8 @@ export const adminUpdateQuestion = async (req, res) => {
     if (imageUrl != null) payload.imageUrl = imageUrl;
     if (audioUrl != null) payload.audioUrl = audioUrl;
     if (passageId != null) payload.passageId = passageId;
+    if (passageOrder != null) payload.passageOrder = passageOrder;
+    if (passageText != null) payload.passageText = passageText;
 
     const updated = await ToeicQuestion.findByIdAndUpdate(
       id,
@@ -531,7 +552,6 @@ export const adminUpdateQuestion = async (req, res) => {
   }
 };
 
-// ====== ADMIN: xoá câu hỏi ======
 export const adminDeleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
@@ -558,7 +578,6 @@ export const adminImportQuestions = async (req, res) => {
       });
     }
 
-    // Xoá hết câu cũ của set + part này, sau đó insert lại
     await ToeicQuestion.deleteMany({ setId, partKey });
 
     const docs = questions.map((q) => ({
@@ -572,6 +591,8 @@ export const adminImportQuestions = async (req, res) => {
       imageUrl: q.imageUrl,
       audioUrl: q.audioUrl,
       passageId: q.passageId,
+      passageOrder: q.passageOrder,
+      passageText: q.passageText,
     }));
 
     await ToeicQuestion.insertMany(docs);
@@ -583,7 +604,10 @@ export const adminImportQuestions = async (req, res) => {
   }
 };
 
-// ===== PUBLIC: lấy câu hỏi cho user luyện tập =====
+// =====================================
+// PUBLIC: QUESTIONS FOR USER
+// =====================================
+
 export const listQuestionsForUser = async (req, res) => {
   try {
     const { id } = req.params;   // setId
@@ -598,7 +622,6 @@ export const listQuestionsForUser = async (req, res) => {
 
     const items = await ToeicQuestion.find(filter).sort({ number: 1 }).lean();
 
-    // Không trả explanation ra cho user (để dành cho phần review sau)
     const shaped = items.map((q) => ({
       id: q._id,
       number: q.number,
@@ -608,6 +631,8 @@ export const listQuestionsForUser = async (req, res) => {
       imageUrl: q.imageUrl,
       audioUrl: q.audioUrl,
       passageId: q.passageId,
+      passageOrder: q.passageOrder,
+      passageText: q.passageText,
     }));
 
     res.json({ ok: true, data: shaped });
@@ -617,7 +642,10 @@ export const listQuestionsForUser = async (req, res) => {
   }
 };
 
-// GET /toeic/my/recent-attempts?days=30
+// =====================================
+// PUBLIC: RECENT ATTEMPTS
+// =====================================
+
 export const getMyToeicRecentAttempts = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -642,9 +670,9 @@ export const getMyToeicRecentAttempts = async (req, res) => {
       setId: a.setId._id || a.setId,
       setTitle: a.setId.title,
       mode: a.mode,
-      totalScore: a.scorePercent ?? null,        // % đúng
-      totalCorrect: a.totalCorrect ?? null,      // số câu đúng
-      totalQuestions: a.totalQuestions ?? null,  // tổng câu
+      totalScore: a.scorePercent ?? null,
+      totalCorrect: a.totalCorrect ?? null,
+      totalQuestions: a.totalQuestions ?? null,
       createdAt: a.createdAt,
     }));
 
@@ -655,5 +683,115 @@ export const getMyToeicRecentAttempts = async (req, res) => {
   }
 };
 
+// =====================================
+// ADMIN UPLOAD IMAGE/AUDIO
+// =====================================
 
+export const adminUploadQuestionImage = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    console.log("===> Upload IMAGE for question:", id);
+    console.log("files:", req.files);
+
+    if (!req.files || !req.files.file) {
+      return res.status(400).json({ ok: false, msg: "Không có file upload" });
+    }
+
+    const file = req.files.file;
+
+    console.log("IMAGE name:", file.name, "type:", file.mimetype);
+
+    const allowed = ["image/jpeg", "image/png", "image/jpg"];
+    if (!allowed.includes(file.mimetype)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Chỉ chấp nhận file ảnh JPG/PNG",
+      });
+    }
+
+    const q = await ToeicQuestion.findById(id);
+    if (!q) {
+      return res.status(404).json({ ok: false, msg: "Không tìm thấy câu hỏi" });
+    }
+
+    const uploadDir = path.join(__dirname, "..", "uploads", "toeic", "images");
+    ensureDir(uploadDir);
+
+    const ext = file.name.split(".").pop();
+    const safeName = `q_${q._id}_${Date.now()}.${ext}`;
+    const destPath = path.join(uploadDir, safeName);
+
+    await file.mv(destPath);
+
+    const fileUrl = `/uploads/toeic/images/${safeName}`;
+    q.imageUrl = fileUrl;
+    await q.save();
+
+    console.log("IMAGE saved to:", destPath);
+    return res.json({ ok: true, data: { imageUrl: fileUrl } });
+  } catch (err) {
+    console.error("adminUploadQuestionImage error:", err);
+    return res
+      .status(500)
+      .json({ ok: false, msg: "Lỗi upload ảnh câu hỏi" });
+  }
+};
+
+export const adminUploadQuestionAudio = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log("===> Upload AUDIO for question:", id);
+    console.log("files:", req.files);
+
+    if (!req.files || !req.files.file) {
+      return res.status(400).json({ ok: false, msg: "Không có file upload" });
+    }
+
+    const file = req.files.file;
+    console.log("AUDIO name:", file.name, "type:", file.mimetype);
+
+    const allowed = [
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/wav",
+      "audio/x-wav",
+      "audio/mp4",
+      "audio/x-m4a",
+      "audio/m4a",
+    ];
+    if (!allowed.includes(file.mimetype)) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Chỉ chấp nhận file audio (mp3/wav/m4a)",
+      });
+    }
+
+    const q = await ToeicQuestion.findById(id);
+    if (!q) {
+      return res.status(404).json({ ok: false, msg: "Không tìm thấy câu hỏi" });
+    }
+
+    const uploadDir = path.join(__dirname, "..", "uploads", "toeic", "audio");
+    ensureDir(uploadDir);
+
+    const ext = file.name.split(".").pop();
+    const safeName = `q_${q._id}_${Date.now()}.${ext}`;
+    const destPath = path.join(uploadDir, safeName);
+
+    await file.mv(destPath);
+
+    const fileUrl = `/uploads/toeic/audio/${safeName}`;
+    q.audioUrl = fileUrl;
+    await q.save();
+
+    console.log("AUDIO saved to:", destPath);
+    return res.json({ ok: true, data: { audioUrl: fileUrl } });
+  } catch (err) {
+    console.error("adminUploadQuestionAudio error:", err);
+    return res
+      .status(500)
+      .json({ ok: false, msg: "Lỗi upload audio câu hỏi" });
+  }
+};

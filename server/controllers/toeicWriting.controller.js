@@ -221,7 +221,15 @@ export const adminDeleteWritingSet = async (req, res) => {
 export const createWritingAttempt = async (req, res) => {
   try {
     const setId = req.params.id;
-    const userId = req.userId || null;
+
+    // LẤY USER TỪ verifyToken (giống bên TOEIC trắc nghiệm)
+    const userId = req.user?.id || req.userId || null;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ ok: false, msg: "Bạn cần đăng nhập để làm bài writing" });
+    }
 
     const set = await ToeicWritingSet.findById(setId);
     if (!set) {
@@ -234,12 +242,12 @@ export const createWritingAttempt = async (req, res) => {
 
     const grade = await gradeWriting({
       prompt: set.prompt,
+      instructions: set.instructions,
       answerText,
-      rubric: set.rubric,
-      level: "TOEIC",
+      maxScore: set.maxScore || 200,
     });
 
-    // nếu vì lý do gì đó grade vẫn null/undefined
+    // fallback nếu grade null
     const g = grade || {
       taskScore: 0,
       grammarScore: 0,
@@ -319,9 +327,15 @@ export const getWritingLastAttempt = async (req, res) => {
 // GET /toeic-writing/my/recent-attempts?days=30
 export const getMyWritingRecentAttempts = async (req, res) => {
   try {
-    const userId = req.userId;
-    const days = parseInt(req.query.days || "30", 10);
+    const userId = req.user?.id || req.userId;
 
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ ok: false, msg: "Unauthorized" });
+    }
+
+    const days = parseInt(req.query.days || "30", 10);
     const from = new Date();
     from.setDate(from.getDate() - days);
 
@@ -335,8 +349,10 @@ export const getMyWritingRecentAttempts = async (req, res) => {
     const items = attempts.map((a) => {
       const s = a.scores || {};
       const predicted = s.predictedToeicScore;
+
       return {
         id: a._id.toString(),
+        setId: a.setId?._id?.toString?.() || null,
         setTitle: a.setId?.title || "(Đề đã xoá)",
         predictedToeicScore: predicted,
         overallScore: s.overallScore,
@@ -348,7 +364,11 @@ export const getMyWritingRecentAttempts = async (req, res) => {
     return res.json({ ok: true, items });
   } catch (err) {
     console.error("getMyWritingRecentAttempts error:", err);
-    return res.status(500).json({ ok: false, msg: "Lỗi lấy lịch sử TOEIC Writing" });
+    return res.status(500).json({
+      ok: false,
+      msg: "Lỗi lấy lịch sử TOEIC Writing",
+    });
   }
 };
+
 

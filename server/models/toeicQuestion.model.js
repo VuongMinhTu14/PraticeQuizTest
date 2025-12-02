@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const choiceSchema = new mongoose.Schema(
   {
-    label: { type: String, required: true }, // A, B, C, D
+    label: { type: String, required: true }, // A,B,C,D
     text: { type: String, required: true },
   },
   { _id: false }
@@ -10,42 +10,31 @@ const choiceSchema = new mongoose.Schema(
 
 const toeicQuestionSchema = new mongoose.Schema(
   {
-    setId: {
-      type: String, // trùng với _id của ToeicSet, ví dụ "ts_2024_set7"
-      required: true,
-    },
-    partKey: {
-      type: String, // "p1"..."p7"
-      required: true,
-    },
-    number: {
-      type: Number, // số câu trong đề tổng (1–200) hoặc số thứ tự trong part
-      required: true,
-    },
-    questionText: {
-      type: String,
-      required: true,
-    },
-    choices: {
-      type: [choiceSchema],
-      default: [],
-    },
-    correctOption: {
-      type: String, // "A", "B", "C", "D"
-      required: true,
-    },
-    explanation: {
-      type: String,
-    },
-    imageUrl: String, // Part 1
-    audioUrl: String, // Part 1–4
-    passageId: String, // để group các câu cùng 1 đoạn Part 3–4–7 sau này
+    setId: { type: String, required: true },
+    partKey: { type: String, required: true }, // "p1".."p7"
+    number: { type: Number, required: true },
+
+    questionText: { type: String, required: true },
+    choices: { type: [choiceSchema], default: [] },
+    correctOption: { type: String, required: true },
+    explanation: String,
+
+    // MEDIA
+    imageUrl: String, // P1: photo; P6–7: image chứa đoạn văn
+    audioUrl: String, // P1–4: audio
+
+    // Group đoạn văn (P3,4,6,7)
+    // Với P6–7: nhiều câu cùng passageId => chung 1 ảnh đoạn văn
+    passageId: String,        // vd: "P7_147_148", "P6_131_134"
+    passageOrder: Number,     // (optional) 1,2,3 cho triple
+    passageText: String,      // (optional) nếu sau này muốn lưu text
   },
   { timestamps: true }
 );
 
-toeicQuestionSchema.index({ setId: 1, partKey: 1, number: 1 }, { unique: true });
+toeicQuestionSchema.index(
+  { setId: 1, partKey: 1, number: 1 },
+  { unique: true }
+);
 
-const ToeicQuestion = mongoose.model("ToeicQuestion", toeicQuestionSchema);
-
-export default ToeicQuestion;
+export default mongoose.model("ToeicQuestion", toeicQuestionSchema);

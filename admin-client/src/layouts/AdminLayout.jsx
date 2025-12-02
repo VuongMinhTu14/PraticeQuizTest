@@ -48,7 +48,7 @@ const AdminLayout = ({ children }) => {
             <FileSearchOutlined /> <span>Câu hỏi</span>
           </Link>
 
-          {/* ⭐ NEW: Đề Writing */}
+          {/*Đề Writing */}
           <Link
             to="/toeic-writing-sets"
             className={`nav-item ${

@@ -11,7 +11,7 @@ import { message } from "antd";
 import {
   getToeicSet,
   createToeicAttempt,
-  getToeicLastResult, // 🔹 API lấy lần làm gần nhất
+  getToeicLastResult,
 } from "../../utils/toeicApi";
 
 const PracticeDetail = () => {
@@ -19,23 +19,28 @@ const PracticeDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // kết quả vừa làm xong nếu được redirect từ AttemptPage
   const navResult = location.state?.lastResult || null;
 
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // ----- TAB -----
+  // "practice" | "full"
+  const [activeTab, setActiveTab] = useState("practice");
+
+  // ----- Luyện tập theo part -----
   const [selected, setSelected] = useState([]); // list key part
   const [limit, setLimit] = useState(""); // phút, '' = không giới hạn
   const [submitting, setSubmitting] = useState(false);
 
-  // kết quả gần nhất (ưu tiên lấy từ navResult, nếu F5 / vào lại thì lấy từ BE)
+  // ----- Kết quả gần nhất -----
   const [lastResult, setLastResult] = useState(navResult);
 
   const [msgApi, contextHolder] = message.useMessage();
 
   // ===== LOAD CHI TIẾT ĐỀ =====
   useEffect(() => {
-    if (!id) return; // URL lỗi
+    if (!id) return;
 
     let alive = true;
     setLoading(true);
@@ -44,13 +49,11 @@ const PracticeDetail = () => {
       .then((data) => {
         if (!alive) return;
         setTest(data);
-        setSelected([]); // reset lựa chọn part
+        setSelected([]);
       })
       .catch((err) => {
         console.error("getToeicSet error:", err);
-        if (alive) {
-          msgApi.error("Không tải được thông tin đề thi TOEIC");
-        }
+        if (alive) msgApi.error("Không tải được thông tin đề thi TOEIC");
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -65,32 +68,24 @@ const PracticeDetail = () => {
   useEffect(() => {
     let alive = true;
 
-    // nếu vừa submit xong navigate về thì đã có navResult
     if (navResult) {
       setLastResult(navResult);
       return;
     }
 
-    // nếu không có navResult (F5 / vào lại từ menu) thì hỏi backend
     const fetchLast = async () => {
       try {
-        const res = await getToeicLastResult(id); // { ok, data }
+        const res = await getToeicLastResult(id);
         if (!alive) return;
 
-        if (res.ok && res.data) {
-          setLastResult(res.data);
-        } else {
-          setLastResult(null);
-        }
+        if (res.ok && res.data) setLastResult(res.data);
+        else setLastResult(null);
       } catch (err) {
         console.error("getToeicLastResult error:", err);
-        // im lặng, không hiển thị cũng được
       }
     };
 
-    if (id) {
-      fetchLast();
-    }
+    if (id) fetchLast();
 
     return () => {
       alive = false;
@@ -103,8 +98,8 @@ const PracticeDetail = () => {
     );
   };
 
-  // ===== BẮT ĐẦU LÀM BÀI =====
-  const handleStart = async () => {
+  // ====== BẮT ĐẦU LÀM BÀI – CHẾ ĐỘ LUYỆN TẬP ======
+  const handleStartPractice = async () => {
     if (!test) return;
     if (selected.length === 0) {
       msgApi.warning("Chọn ít nhất 1 phần thi để luyện nha!");
@@ -136,6 +131,49 @@ const PracticeDetail = () => {
         msgApi.warning(serverMsg || "Bạn cần đăng nhập để luyện đề");
       } else {
         msgApi.error(serverMsg || "Không tạo được bài luyện tập, thử lại sau");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ====== BẮT ĐẦU LÀM BÀI – CHẾ ĐỘ FULL TEST ======
+  const handleStartFullTest = async () => {
+    if (!test) return;
+
+    const allParts = (test.parts || []).map((p) => p.key);
+    if (allParts.length === 0) {
+      msgApi.error("Đề này chưa có cấu trúc part, không thể làm full test");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const payload = {
+        selectedParts: allParts,
+        // full test thì dùng đúng thời gian chuẩn của đề
+        timeLimitSec: test.durationSec || null,
+      };
+
+      const res = await createToeicAttempt(test.id, payload);
+
+      if (!res.ok) {
+        msgApi.error(res.msg || "Không tạo được full test");
+        return;
+      }
+
+      msgApi.success("Full test đã sẵn sàng, cố lên nhé!");
+      navigate(`/attempt/${res.attemptId}`);
+    } catch (err) {
+      console.error("createFullTest error:", err);
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.msg;
+
+      if (status === 401) {
+        msgApi.warning(serverMsg || "Bạn cần đăng nhập để làm full test");
+      } else {
+        msgApi.error(serverMsg || "Không tạo được full test, thử lại sau");
       }
     } finally {
       setSubmitting(false);
@@ -185,7 +223,7 @@ const PracticeDetail = () => {
         ← Quay lại
       </button>
 
-      {/* KẾT QUẢ GẦN NHẤT CỦA ĐỀ NÀY (NẾU CÓ) */}
+      {/* KẾT QUẢ GẦN NHẤT */}
       {lastResult && lastResult.setId === test.id && (
         <div className="result-latest-box">
           <div className="result-latest-title">Kết quả gần nhất của bạn</div>
@@ -226,7 +264,7 @@ const PracticeDetail = () => {
         </div>
       )}
 
-      {/* HEADER ĐỀ */}
+      {/* HEADER */}
       <div className="detail-header">
         <div className="chip">#TOEIC</div>
         <h1 className="title">{test.title}</h1>
@@ -246,84 +284,121 @@ const PracticeDetail = () => {
         </div>
 
         <div className="note">
-          Chế độ <b>Luyện tập</b> cho phép chọn part và giới hạn thời gian tuỳ ý.
-          Sau này sẽ có thêm chế độ <b>Làm full test</b> để quy đổi sang điểm TOEIC
-          chính xác hơn.
+          <b>Luyện tập</b>: chọn part, thời gian tuỳ ý.{" "}
+          <br />
+          <b>Full test</b>: làm đủ 7 part với thời gian chuẩn, dùng để quy đổi
+          sang điểm TOEIC sát thực tế hơn.
         </div>
       </div>
 
-      {/* TABS (mới chỉ active tab Luyện tập) */}
+      {/* TABS */}
       <div className="tabs">
-        <button className="tab active">Luyện tập</button>
-        <button className="tab" disabled>
-          Full test (sắp ra mắt)
+        <button
+          className={`tab ${activeTab === "practice" ? "active" : ""}`}
+          onClick={() => setActiveTab("practice")}
+        >
+          Luyện tập
+        </button>
+        <button
+          className={`tab ${activeTab === "full" ? "active" : ""}`}
+          onClick={() => setActiveTab("full")}
+        >
+          Full test
         </button>
         <button className="tab" disabled>
           Thảo luận
         </button>
       </div>
 
-      {/* CHỌN PART + GIỚI HẠN THỜI GIAN */}
-      <div className="panel">
-        <div className="panel-title">Chọn phần thi bạn muốn làm</div>
+      {/* PANEL THEO TAB */}
+      {activeTab === "practice" && (
+        <div className="panel">
+          <div className="panel-title">Chọn phần thi bạn muốn làm</div>
 
-        <div className="parts">
-          {test.parts?.map((p) => (
-            <label
-              key={p.key}
-              className={`part ${selected.includes(p.key) ? "checked" : ""}`}
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(p.key)}
-                onChange={() => togglePart(p.key)}
-              />
+          <div className="parts">
+            {test.parts?.map((p) => (
+              <label
+                key={p.key}
+                className={`part ${selected.includes(p.key) ? "checked" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(p.key)}
+                  onChange={() => togglePart(p.key)}
+                />
 
-              <div className="part-main">
-                <div className="part-title">
-                  {p.name}{" "}
-                  <span className="count">({p.questions} câu hỏi)</span>
+                <div className="part-main">
+                  <div className="part-title">
+                    {p.name}{" "}
+                    <span className="count">({p.questions} câu hỏi)</span>
+                  </div>
+                  <div className="tag-row">
+                    {p.tags?.slice(0, 10).map((tag) => (
+                      <span key={tag} className="tag">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="tag-row">
-                  {p.tags?.slice(0, 10).map((tag) => (
-                    <span key={tag} className="tag">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <div className="time-block">
-          <div className="label">
-            Giới hạn thời gian{" "}
-            <span className="hint">(để trống = không giới hạn)</span>
+              </label>
+            ))}
           </div>
-          <select
-            className="time-select"
-            value={limit}
-            onChange={(e) => setLimit(e.target.value)}
-          >
-            <option value="">-- Chọn thời gian --</option>
-            <option value="15">15 phút</option>
-            <option value="30">30 phút</option>
-            <option value="45">45 phút</option>
-            <option value="60">60 phút</option>
-            <option value="90">90 phút</option>
-            <option value="120">120 phút</option>
-          </select>
-        </div>
 
-        <button
-          className="btn-start"
-          onClick={handleStart}
-          disabled={submitting}
-        >
-          {submitting ? "Đang tạo bài luyện..." : "Luyện tập"}
-        </button>
-      </div>
+          <div className="time-block">
+            <div className="label">
+              Giới hạn thời gian{" "}
+              <span className="hint">(để trống = không giới hạn)</span>
+            </div>
+            <select
+              className="time-select"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+            >
+              <option value="">-- Chọn thời gian --</option>
+              <option value="15">15 phút</option>
+              <option value="30">30 phút</option>
+              <option value="45">45 phút</option>
+              <option value="60">60 phút</option>
+              <option value="90">90 phút</option>
+              <option value="120">120 phút</option>
+            </select>
+          </div>
+
+          <button
+            className="btn-start"
+            onClick={handleStartPractice}
+            disabled={submitting}
+          >
+            {submitting ? "Đang tạo bài luyện..." : "Luyện tập"}
+          </button>
+        </div>
+      )}
+
+      {activeTab === "full" && (
+        <div className="panel">
+          <div className="panel-title">Làm full test TOEIC</div>
+          <p style={{ marginBottom: 12, fontSize: 14 }}>
+            Bạn sẽ làm <b>đủ {test.parts?.length || 0} part</b> với tổng cộng{" "}
+            <b>{test.totalQuestions}</b> câu hỏi trong vòng{" "}
+            <b>{minutes} phút</b>. Hệ thống sẽ tính điểm tổng quát và lưu vào
+            dashboard.
+          </p>
+
+          <ul style={{ fontSize: 14, marginLeft: 18, marginBottom: 16 }}>
+            <li>Listening: Parts 1–4 (có audio + hình).</li>
+            <li>Reading: Parts 5–7.</li>
+            <li>Bạn chỉ có 1 bộ thời gian duy nhất cho toàn bài.</li>
+          </ul>
+
+          <button
+            className="btn-start"
+            onClick={handleStartFullTest}
+            disabled={submitting}
+          >
+            {submitting ? "Đang tạo full test..." : "Bắt đầu full test"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -15,67 +15,94 @@ import "./dashboard.css";
 
 const Dashboard = () => {
   const { currentUser } = useAuthStore();
+
   const username =
     currentUser?.username || currentUser?.displayName || "User";
+
+  // lấy userId dùng cho query key
+  const userId =
+    currentUser?._id || currentUser?.id || currentUser?.userId || null;
 
   const images = ["/images/1.png", "/images/2.png", "/images/3.png"];
 
   // ===== FETCH TOEIC MCQ =====
   const {
-    data: toeicAttempts = [],
+    data: toeicAttemptsRaw,
     isLoading: loadingToeic,
     isError: toeicError,
   } = useQuery({
-    queryKey: ["my-toeic-attempts"],
+    queryKey: ["my-toeic-attempts", userId],
     queryFn: () => getMyToeicRecentAttempts(30),
+    enabled: !!userId, // chỉ gọi khi đã có user
   });
+
+  const toeicAttempts = toeicAttemptsRaw || [];
 
   // ===== FETCH WRITING =====
   const {
-    data: writingAttempts = [],
+    data: writingAttemptsRaw,
     isLoading: loadingWriting,
     isError: writingError,
   } = useQuery({
-    queryKey: ["my-writing-attempts"],
+    queryKey: ["my-writing-attempts", userId],
     queryFn: () => getMyWritingRecentAttempts(30),
+    enabled: !!userId,
   });
+
+  const writingAttempts = writingAttemptsRaw || [];
 
   // ===== CHUẨN HOÁ DATA CHO CHART =====
 
-  const toeicChartData = useMemo(
-  () =>
-    (toeicAttempts || []).map((a) => ({
-      // dùng full datetime để mỗi attempt là 1 mốc riêng
-      date: new Date(a.createdAt).toLocaleString("vi-VN"),
+  const toeicChartData = useMemo(() => {
+    const sorted = [...(toeicAttempts || [])].sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    );
 
-      score: a.totalScore ?? 0,             // % đúng
-      setTitle: a.setTitle || "Đề không tên",
-
-      // thêm info để tooltip dùng
-      mode: a.mode === "full" ? "Full test" : "Theo part",
-      partSummary: a.partSummary || "",     // ví dụ: "P1, P2"
-    })),
-  [toeicAttempts]
-  );
-
-  const writingChartData = useMemo(
-    () =>
-      (writingAttempts || []).map((a) => ({
-        date: new Date(a.createdAt).toLocaleString("vi-VN"),
-        score: a.predictedToeicScore ?? 0,
+    return sorted.map((a, idx) => {
+      const d = new Date(a.createdAt);
+      return {
+        label:
+          (a.setTitle || "Đề không tên") +
+          (sorted.filter((x) => x.setId === a.setId).length > 1
+            ? ` (#${idx + 1})`
+            : ""),
+        score: a.totalScore ?? 0,
         setTitle: a.setTitle || "Đề không tên",
-      })),
-    [writingAttempts]
-  );
+        mode: a.mode === "full" ? "Full test" : "Theo part",
+        partSummary: a.partSummary || "",
+        dateLabel: d.toLocaleString("vi-VN"),
+      };
+    });
+  }, [toeicAttempts]);
+
+  const writingChartData = useMemo(() => {
+    const sorted = [...(writingAttempts || [])].sort(
+      (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    );
+
+    return sorted.map((a) => {
+      const d = new Date(a.createdAt);
+      return {
+        // trục X là tên đề (category)
+        label: a.setTitle || "Đề không tên",
+        score: a.predictedToeicScore ?? 0,
+        dateLabel: d.toLocaleString("vi-VN"), // dùng cho tooltip
+      };
+    });
+  }, [writingAttempts]);
 
   const toeicLineConfig = {
     data: toeicChartData,
-    xField: "date",
+    xField: "label",   // 🔥 trục X là tên đề
     yField: "score",
     smooth: true,
     point: { size: 4 },
+    xAxis: {
+      type: "cat",     // category axis
+      title: { text: "Đề TOEIC" },
+    },
     yAxis: { min: 0, max: 100 },
-
+    legend: false,
     tooltip: {
       customContent: (title, items) => {
         if (!items || items.length === 0) return null;
@@ -83,17 +110,15 @@ const Dashboard = () => {
 
         return `
           <div style="padding:8px 12px;">
-            <div><b>${d.date}</b></div>
-            <div style="margin-top:4px;">
-              <div><b>${d.setTitle}</b></div>
-              <div>Kiểu làm: ${d.mode || "-"}</div>
-              ${
-                d.partSummary
-                  ? `<div>Part: ${d.partSummary}</div>`
-                  : ""
-              }
-              <div>Điểm: <b>${d.score}%</b></div>
-            </div>
+            <div><b>${d.setTitle}</b></div>
+            <div>${d.dateLabel}</div>
+            <div>Kiểu làm: ${d.mode || "-"}</div>
+            ${
+              d.partSummary
+                ? `<div>Part: ${d.partSummary}</div>`
+                : ""
+            }
+            <div>Điểm: <b>${d.score}%</b></div>
           </div>
         `;
       },
@@ -102,23 +127,32 @@ const Dashboard = () => {
 
   const writingLineConfig = {
     data: writingChartData,
-    xField: "date",
+    xField: "label",      // trục X là tên đề
     yField: "score",
-    seriesField: "setTitle",
     smooth: true,
     point: { size: 4 },
+    xAxis: {
+      type: "cat",        // category axis
+      title: { text: "Đề writing" },
+    },
     yAxis: { min: 0, max: 200 },
-    legend: { position: "top" },
+    legend: false,        // một đường duy nhất, không cần legend
     tooltip: {
-      formatter: (item) => ({
-        name: item.setTitle,
-        value: item.score,
-      }),
+      customContent: (title, items) => {
+        if (!items?.length) return null;
+        const d = items[0].data;
+        return `
+          <div style="padding:8px 12px;">
+            <div><b>${d.label}</b></div>
+            <div>${d.dateLabel}</div>
+            <div>Điểm: <b>${d.score}</b></div>
+          </div>
+        `;
+      },
     },
   };
 
   // ===== COLUMNS TABLE =====
-
   const toeicColumns = [
     {
       title: "Ngày làm bài",
@@ -202,7 +236,9 @@ const Dashboard = () => {
               title="Điểm các đề TOEIC trong 30 ngày gần đây"
               className="stats-card"
             >
-              {loadingToeic ? (
+              {!userId ? (
+                <Empty description="Đăng nhập để xem lịch sử TOEIC" />
+              ) : loadingToeic ? (
                 <Spin />
               ) : toeicError ? (
                 <div>Lỗi tải dữ liệu TOEIC.</div>
@@ -217,7 +253,9 @@ const Dashboard = () => {
           {/* TOEIC MCQ Table */}
           <Col xs={24} lg={24}>
             <Card title="Chi tiết bài làm TOEIC" className="stats-card">
-              {loadingToeic ? (
+              {!userId ? (
+                <Empty description="Đăng nhập để xem lịch sử TOEIC" />
+              ) : loadingToeic ? (
                 <Spin />
               ) : toeicError ? (
                 <div>Lỗi tải dữ liệu TOEIC.</div>
@@ -243,7 +281,9 @@ const Dashboard = () => {
               title="Điểm TOEIC Writing (0–200) trong 30 ngày gần đây"
               className="stats-card"
             >
-              {loadingWriting ? (
+              {!userId ? (
+                <Empty description="Đăng nhập để xem lịch sử Writing" />
+              ) : loadingWriting ? (
                 <Spin />
               ) : writingError ? (
                 <div>Lỗi tải dữ liệu Writing.</div>
@@ -258,7 +298,9 @@ const Dashboard = () => {
           {/* Writing Table */}
           <Col xs={24} lg={24}>
             <Card title="Chi tiết bài TOEIC Writing" className="stats-card">
-              {loadingWriting ? (
+              {!userId ? (
+                <Empty description="Đăng nhập để xem lịch sử Writing" />
+              ) : loadingWriting ? (
                 <Spin />
               ) : writingError ? (
                 <div>Lỗi tải dữ liệu Writing.</div>
