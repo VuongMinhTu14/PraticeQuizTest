@@ -48,14 +48,24 @@ const AdminLayout = ({ children }) => {
             <FileSearchOutlined /> <span>Câu hỏi</span>
           </Link>
 
-          {/*Đề Writing */}
+          {/* Đề Writing */}
           <Link
             to="/toeic-writing-sets"
             className={`nav-item ${
               path.startsWith("/toeic-writing-sets") ? "active" : ""
             }`}
           >
-            <EditOutlined /> <span>TOEIC Writing</span>
+            <EditOutlined /> <span>Đề TOEIC Writing</span>
+          </Link>
+
+          {/* Câu hỏi Writing */}
+          <Link
+            to="/toeic-writing-questions"
+            className={`nav-item ${
+              path.startsWith("/toeic-writing-questions") ? "active" : ""
+            }`}
+          >
+            <EditOutlined /> <span>Câu hỏi Writing</span>
           </Link>
         </nav>
       </Sider>

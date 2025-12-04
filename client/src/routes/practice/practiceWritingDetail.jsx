@@ -1,274 +1,369 @@
-// client/src/routes/practice/practiceWritingDetail.jsx
-import { useState, useMemo, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// src/routes/practice/practiceWritingDetail.jsx
+import "./practiceDetail.css";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  ClockCircleOutlined,
+  FileTextOutlined,
+  CheckSquareOutlined,
+} from "@ant-design/icons";
+import { message } from "antd";
 import {
   getWritingSet,
-  createWritingAttemptUser,
   getWritingLastAttempt,
+  createWritingAttempt,
 } from "../../utils/toeicApi";
-import "./practiceWritingDetail.css";
 
-const wordCount = (text) =>
-  text
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
+const WRITING_PARTS = [
+  { key: "w1_5", name: "Questions 1–5 (Picture)" },
+  { key: "w6_7", name: "Questions 6–7 (Email)" },
+  { key: "w8", name: "Question 8 (Essay)" },
+];
 
 const PracticeWritingDetail = () => {
-  const { id } = useParams(); // tw_2025_email_01
-  const queryClient = useQueryClient();
+  const { id } = useParams(); // writing setId
+  const navigate = useNavigate();
+  const [msgApi, contextHolder] = message.useMessage();
 
-  const [answerText, setAnswerText] = useState("");
-  const [latestResult, setLatestResult] = useState(null); // lưu kết quả sau khi nộp
+  const [test, setTest] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Lấy thông tin đề
-  const {
-    data: setData,
-    isLoading: loadingSet,
-    error: setError,
-  } = useQuery({
-    queryKey: ["writingSet", id],
-    queryFn: () => getWritingSet(id),
-  });
+  const [activeTab, setActiveTab] = useState("practice"); // practice | full
+  const [selectedParts, setSelectedParts] = useState([]);
+  const [limit, setLimit] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // Lấy attempt gần nhất
-  const {
-    data: lastAttempt,
-    isLoading: loadingLast,
-  } = useQuery({
-    queryKey: ["writingLastAttempt", id],
-    queryFn: () => getWritingLastAttempt(id),
-  });
+  const [lastAttempt, setLastAttempt] = useState(null);
 
-  // Khi có attempt gần nhất, fill lại bài làm & kết quả
+  // ===== LOAD SET =====
   useEffect(() => {
-    if (lastAttempt) {
-      setAnswerText(lastAttempt.answerText || "");
-      setLatestResult(lastAttempt);
+    if (!id) return;
+    let alive = true;
+    setLoading(true);
+
+    getWritingSet(id)
+      .then((data) => {
+        if (!alive) return;
+        setTest(data);
+        setSelectedParts([]);
+      })
+      .catch((err) => {
+        console.error("getWritingSet error:", err);
+        msgApi.error("Không tải được đề TOEIC Writing");
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [id, msgApi]);
+
+  // ===== LAST ATTEMPT =====
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+
+    getWritingLastAttempt(id)
+      .then((data) => {
+        if (!alive) return;
+        setLastAttempt(data || null);
+      })
+      .catch((err) => {
+        console.error("getWritingLastAttempt error:", err);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  const togglePart = (key) => {
+    setSelectedParts((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  // ===== START PRACTICE (by part) =====
+  const handleStartPractice = async () => {
+    if (!test) return;
+    if (selectedParts.length === 0) {
+      msgApi.warning("Chọn ít nhất 1 phần để luyện nha!");
+      return;
     }
-  }, [lastAttempt]);
 
-  const minWords = setData?.minWords || 0;
-  const maxWords = setData?.maxWords || 9999;
+    try {
+      setSubmitting(true);
+      const payload = {
+        selectedParts,
+        timeLimitSec: limit ? Number(limit) * 60 : null,
+      };
 
-  const currentWordCount = useMemo(() => wordCount(answerText), [answerText]);
+      const res = await createWritingAttempt(test.id, payload); // { ok, attemptId }
+      if (!res.ok) {
+        msgApi.error(res.msg || "Không tạo được bài Writing");
+        return;
+      }
 
-  const canSubmit =
-    currentWordCount >= minWords && currentWordCount <= maxWords;
+      msgApi.success("Tạo bài TOEIC Writing thành công!");
+      navigate(`/attempt-writing/${res.attemptId}`);
+    } catch (err) {
+      console.error("createWritingAttempt error:", err);
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.msg;
 
-  // Gửi bài để chấm
-  const mutateGrade = useMutation({
-    mutationFn: (text) => createWritingAttemptUser(id, text),
-    onSuccess: (data) => {
-      // data chính là attempt vừa tạo
-      setLatestResult(data);
-      alert("Đã chấm điểm xong! Kéo xuống xem kết quả nha.");
-      // refresh last-attempt
-      queryClient.invalidateQueries(["writingLastAttempt", id]);
-    },
-    onError: (err) => {
-      const msg =
-        err?.response?.data?.msg || err.message || "Lỗi khi chấm điểm";
-      alert(msg);
-    },
-  });
+      if (status === 401) {
+        msgApi.warning(serverMsg || "Bạn cần đăng nhập để luyện Writing");
+      } else {
+        msgApi.error(serverMsg || "Không tạo được bài Writing, thử lại sau");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  if (loadingSet) {
+  // ===== START FULL TEST =====
+  const handleStartFull = async () => {
+    if (!test) return;
+
+    const allParts = WRITING_PARTS.map((p) => p.key);
+
+    try {
+      setSubmitting(true);
+      const payload = {
+        selectedParts: allParts,
+        timeLimitSec: test.durationSec || null,
+      };
+
+      const res = await createWritingAttempt(test.id, payload);
+      if (!res.ok) {
+        msgApi.error(res.msg || "Không tạo được full Writing test");
+        return;
+      }
+
+      msgApi.success("Full TOEIC Writing đã sẵn sàng!");
+      navigate(`/attempt-writing/${res.attemptId}`);
+    } catch (err) {
+      console.error("createWritingAttempt error:", err);
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.msg;
+
+      if (status === 401) {
+        msgApi.warning(serverMsg || "Bạn cần đăng nhập để làm full test");
+      } else {
+        msgApi.error(serverMsg || "Không tạo được full test, thử lại sau");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ===== RENDER =====
+  if (!id) {
     return (
-      <div className="practice-writing-page">
-        <h1 className="writing-title">TOEIC Writing (AI chấm điểm)</h1>
-        <p>Đang tải đề viết...</p>
+      <div className="detail-page">
+        {contextHolder}
+        <p>Đường dẫn không hợp lệ (thiếu mã đề writing).</p>
       </div>
     );
   }
 
-  if (setError || !setData) {
+  if (loading) {
     return (
-      <div className="practice-writing-page">
-        <h1 className="writing-title">TOEIC Writing (AI chấm điểm)</h1>
-        <p className="error-text">
-          Không tải được đề writing: {setError?.message}
-        </p>
+      <div className="detail-page">
+        {contextHolder}
+        <p>Đang tải đề TOEIC Writing...</p>
       </div>
     );
   }
 
-  const result = latestResult; // cho dễ đọc
-  const scores = result?.scores;
+  if (!test) {
+    return (
+      <div className="detail-page">
+        {contextHolder}
+        <p>Không tìm thấy đề TOEIC Writing này.</p>
+      </div>
+    );
+  }
+
+  const minutes = Math.round((test.durationSec ?? 0) / 60);
 
   return (
-    <div className="practice-writing-page">
-      {/* Header đề */}
-      <div className="writing-header">
-        <h1 className="writing-title">{setData.title}</h1>
-        <div className="writing-meta">
-          <span className="badge badge-type">{setData.taskType}</span>
-          <span className="badge badge-year">Year: {setData.year}</span>
+    <div className="detail-page">
+      {contextHolder}
+
+      <button
+        type="button"
+        className="btn-back"
+        onClick={() => navigate(-1)}
+      >
+        ← Quay lại
+      </button>
+
+      {/* Kết quả lần gần nhất (nếu có) */}
+      {lastAttempt && (
+        <div className="result-latest-box">
+          <div className="result-latest-title">
+            Kết quả TOEIC Writing gần nhất
+          </div>
+          <div className="result-summary">
+            Điểm dự đoán TOEIC Writing:{" "}
+            <b>{lastAttempt.summary?.predictedToeicScore ?? "?"}</b>/200
+          </div>
+          <table className="result-table">
+            <tbody>
+              <tr>
+                <td>Task achievement</td>
+                <td>{lastAttempt.summary?.taskScore ?? "-"}/5</td>
+              </tr>
+              <tr>
+                <td>Grammar</td>
+                <td>{lastAttempt.summary?.grammarScore ?? "-"}/5</td>
+              </tr>
+              <tr>
+                <td>Vocabulary</td>
+                <td>{lastAttempt.summary?.vocabularyScore ?? "-"}/5</td>
+              </tr>
+              <tr>
+                <td>Organization</td>
+                <td>{lastAttempt.summary?.organizationScore ?? "-"}/5</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
 
-      {/* Đề bài */}
-      <section className="writing-section writing-prompt">
-        <h2 className="section-title">Đề bài</h2>
-        <p className="prompt-text">{setData.prompt}</p>
-        <p className="word-require">
-          Yêu cầu số từ: từ {minWords} từ đến {maxWords} từ
-        </p>
-      </section>
+      {/* HEADER */}
+      <div className="detail-header">
+        <div className="chip">#TOEIC Writing</div>
+        <h1 className="title">{test.title}</h1>
 
-      {/* Bài làm */}
-      <section className="writing-section writing-answer">
-        <div className="answer-header">
-          <h2 className="section-title">Bài làm của bạn</h2>
-          <span className="word-count">
-            Số từ: {currentWordCount} / min {minWords}
+        <div className="header-meta">
+          <span>
+            <ClockCircleOutlined /> Thời gian làm bài: {minutes} phút
+          </span>
+          <span>•</span>
+          <span>
+            <FileTextOutlined /> 3 phần (Q1–5, Q6–7, Q8)
+          </span>
+          <span>•</span>
+          <span>
+            <CheckSquareOutlined /> {test.totalQuestions ?? 8} câu hỏi
           </span>
         </div>
 
-        <textarea
-          className="answer-textarea"
-          rows={10}
-          placeholder="Hãy viết email / bài luận của bạn ở đây..."
-          value={answerText}
-          onChange={(e) => setAnswerText(e.target.value)}
-        />
-
-        <div className="answer-actions">
-          <button
-            className="btn-primary"
-            disabled={!canSubmit || mutateGrade.isPending}
-            onClick={() => mutateGrade.mutate(answerText)}
-          >
-            {mutateGrade.isPending ? "Đang chấm điểm..." : "Nộp bài & AI chấm điểm"}
-          </button>
-          {!canSubmit && (
-            <span className="hint-text">
-              Bài phải có ít nhất {minWords} từ (và không quá {maxWords} từ) mới
-              được chấm.
-            </span>
-          )}
+        <div className="note">
+          <b>Luyện theo phần</b>: chọn cụm câu (1–5, 6–7 hoặc 8) để luyện
+          nhanh. <br />
+          <b>Full test</b>: làm đủ 8 câu để mô phỏng đề TOEIC Writing thật.
         </div>
-      </section>
+      </div>
 
-      {/* Kết quả chấm điểm */}
-      <section className="writing-section writing-result">
-        <h2 className="section-title">Kết quả gần nhất</h2>
+      {/* TABS */}
+      <div className="tabs">
+        <button
+          className={`tab ${activeTab === "practice" ? "active" : ""}`}
+          onClick={() => setActiveTab("practice")}
+        >
+          Luyện theo phần
+        </button>
+        <button
+          className={`tab ${activeTab === "full" ? "active" : ""}`}
+          onClick={() => setActiveTab("full")}
+        >
+          Full Writing Test
+        </button>
+        <button className="tab" disabled>
+          Thảo luận
+        </button>
+      </div>
 
-        {loadingLast && !result && <p>Đang tải kết quả...</p>}
+      {/* TAB: PRACTICE BY PART */}
+      {activeTab === "practice" && (
+        <div className="panel">
+          <div className="panel-title">Chọn phần Writing muốn luyện</div>
 
-        {!result && !loadingLast && (
-          <p className="hint-text">
-            Bạn chưa có bài nào được chấm. Hãy viết bài và bấm "Nộp bài & AI
-            chấm điểm".
-          </p>
-        )}
+          <div className="parts">
+            {WRITING_PARTS.map((p) => (
+              <label
+                key={p.key}
+                className={`part ${
+                  selectedParts.includes(p.key) ? "checked" : ""
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedParts.includes(p.key)}
+                  onChange={() => togglePart(p.key)}
+                />
 
-        {result && (
-            <div className="result-layout">
-                <div className="result-main-card">
-                <div className="overall-score">
-                    <div className="overall-label">Overall score</div>
-                    <div className="overall-value">
-                    {(() => {
-                        const val =
-                        scores?.overall ??
-                        scores?.overallScore ??
-                        0;
-                        return val.toFixed ? val.toFixed(1) : val;
-                    })()}
-                    /5.0
-                    </div>
+                <div className="part-main">
+                  <div className="part-title">
+                    {p.name}
+                    <span className="count">
+                      {p.key === "w8" ? " (1 câu essay)" : " (nhiều câu nhỏ)"}
+                    </span>
+                  </div>
                 </div>
+              </label>
+            ))}
+          </div>
 
-                <div className="result-grid">
-                    <div className="result-item">
-                    <div className="result-label">Task achievement</div>
-                    <div className="result-value">
-                        {(() => {
-                        const val =
-                            scores?.task ??
-                            scores?.taskScore ??
-                            0;
-                        return val.toFixed ? val.toFixed(1) : val;
-                        })()}
-                        /5
-                    </div>
-                    </div>
-
-                    <div className="result-item">
-                    <div className="result-label">Grammar</div>
-                    <div className="result-value">
-                        {(() => {
-                        const val =
-                            scores?.grammar ??
-                            scores?.grammarScore ??
-                            0;
-                        return val.toFixed ? val.toFixed(1) : val;
-                        })()}
-                        /5
-                    </div>
-                    </div>
-
-                    <div className="result-item">
-                    <div className="result-label">Vocabulary</div>
-                    <div className="result-value">
-                        {(() => {
-                        const val =
-                            scores?.vocab ??
-                            scores?.vocabularyScore ??
-                            0;
-                        return val.toFixed ? val.toFixed(1) : val;
-                        })()}
-                        /5
-                    </div>
-                    </div>
-
-                    <div className="result-item">
-                    <div className="result-label">Organization</div>
-                    <div className="result-value">
-                        {(() => {
-                        const val =
-                            scores?.organization ??
-                            scores?.organizationScore ??
-                            0;
-                        return val.toFixed ? val.toFixed(1) : val;
-                        })()}
-                        /5
-                    </div>
-                    </div>
-
-                    <div className="result-item">
-                    <div className="result-label">Predicted TOEIC Writing</div>
-                    <div className="result-value">
-                        {scores?.predictedToeicScore ??
-                        scores?.predictedToeic ??
-                        0}
-                        /200
-                    </div>
-                    </div>
-
-                    <div className="result-item">
-                    <div className="result-label">Level</div>
-                    <div className="result-value">
-                        {scores?.toeicWritingLevel
-                        ? `Level ${scores.toeicWritingLevel}`
-                        : "-"}
-                    </div>
-                    </div>
-                </div>
-                </div>
-
-                <div className="feedback-card">
-                <h3 className="feedback-title">Nhận xét chi tiết</h3>
-                <p className="feedback-text">
-                    {result.feedback ||
-                    "AI chưa trả về nhận xét chi tiết cho bài này."}
-                </p>
-                </div>
+          <div className="time-block">
+            <div className="label">
+              Giới hạn thời gian{" "}
+              <span className="hint">(để trống = không giới hạn)</span>
             </div>
-            )}
-      </section>
+            <select
+              className="time-select"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+            >
+              <option value="">-- Chọn thời gian --</option>
+              <option value="15">15 phút</option>
+              <option value="30">30 phút</option>
+              <option value="45">45 phút</option>
+              <option value="60">60 phút</option>
+              <option value="75">75 phút</option>
+            </select>
+          </div>
+
+          <button
+            className="btn-start"
+            onClick={handleStartPractice}
+            disabled={submitting}
+          >
+            {submitting ? "Đang tạo bài..." : "Bắt đầu luyện"}
+          </button>
+        </div>
+      )}
+
+      {/* TAB: FULL TEST */}
+      {activeTab === "full" && (
+        <div className="panel">
+          <div className="panel-title">Làm full TOEIC Writing</div>
+          <p style={{ fontSize: 14, marginBottom: 12 }}>
+            Bạn sẽ làm đủ <b>8 câu Writing</b> trong vòng{" "}
+            <b>{minutes} phút</b>. Hệ thống AI sẽ chấm theo rubric và quy đổi
+            ra <b>điểm TOEIC Writing (0–200)</b>.
+          </p>
+
+          <ul style={{ fontSize: 14, marginLeft: 18, marginBottom: 16 }}>
+            <li>Questions 1–5: Viết câu dựa trên hình và từ gợi ý.</li>
+            <li>Questions 6–7: Trả lời email công việc.</li>
+            <li>Question 8: Viết opinion essay.</li>
+          </ul>
+
+          <button
+            className="btn-start"
+            onClick={handleStartFull}
+            disabled={submitting}
+          >
+            {submitting ? "Đang tạo bài..." : "Bắt đầu full test"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

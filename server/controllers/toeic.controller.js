@@ -673,6 +673,7 @@ export const getMyToeicRecentAttempts = async (req, res) => {
       totalScore: a.scorePercent ?? null,
       totalCorrect: a.totalCorrect ?? null,
       totalQuestions: a.totalQuestions ?? null,
+      scoreByPart: a.scoreByPart || [],
       createdAt: a.createdAt,
     }));
 
@@ -795,3 +796,77 @@ export const adminUploadQuestionAudio = async (req, res) => {
       .json({ ok: false, msg: "Lỗi upload audio câu hỏi" });
   }
 };
+
+// GET /toeic/attempts/:id/review
+export const getAttemptReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const att = await ToeicAttempt.findById(id).lean();
+    if (!att) {
+      return res.status(404).json({ ok: false, msg: "Không tìm thấy attempt" });
+    }
+
+    // Optionally check quyền:
+    if (req.user && String(att.userId) !== String(req.user.id)) {
+      return res.status(403).json({ ok: false, msg: "Không có quyền xem bài này" });
+    }
+
+    const questions = await ToeicQuestion.find({
+      setId: att.setId,
+      partKey: { $in: att.selectedParts || [] },
+    })
+      .sort({ number: 1 })
+      .lean();
+
+    // map answer theo questionId
+    const ansMap = new Map();
+    (att.answers || []).forEach((a) => {
+      ansMap.set(String(a.questionId), a);
+    });
+
+    const items = questions.map((q) => {
+      const ans = ansMap.get(String(q._id));
+      return {
+        questionId: q._id,
+        number: q.number,
+        partKey: q.partKey,
+        questionText: q.questionText,
+        choices: q.choices,
+        correctOption: q.correctOption,
+        explanation: q.explanation || "",
+        imageUrl: q.imageUrl,
+        audioUrl: q.audioUrl,
+        passageId: q.passageId,
+        passageText: q.passageText,
+
+        userAnswer: ans ? ans.selectedOption : null,
+        isCorrect: ans ? !!ans.isCorrect : false,
+      };
+    });
+
+    return res.json({
+      ok: true,
+      data: {
+        attempt: {
+          id: att._id,
+          setId: att.setId,
+          selectedParts: att.selectedParts,
+          mode: att.mode,
+          totalQuestions: att.totalQuestions,
+          totalCorrect: att.totalCorrect,
+          scoreRaw: att.scoreRaw,
+          scorePercent: att.scorePercent,
+          scoreByPart: att.scoreByPart || [],
+          createdAt: att.createdAt,
+          submittedAt: att.submittedAt,
+        },
+        items,
+      },
+    });
+  } catch (err) {
+    console.error("getAttemptReview error:", err);
+    return res.status(500).json({ ok: false, msg: "Server error" });
+  }
+};
+

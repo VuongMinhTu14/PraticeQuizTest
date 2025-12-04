@@ -1,0 +1,144 @@
+.writing-review-page {
+  max-width: 980px;
+  margin: 24px auto;
+  padding: 16px;
+}
+
+.writing-review-page .review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.writing-review-page .review-header h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.writing-review-page .review-header button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  background: #111827;
+  color: #fff;
+  transition: 0.18s;
+}
+
+.writing-review-page .review-header button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.writing-review-page .review-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.writing-review-page .sum-card {
+  text-align: center;
+}
+
+.writing-review-page .sum-card h3 {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #6b7280;
+}
+
+.writing-review-page .sum-card .score {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* LIST QUESTION CARDS */
+.writing-review-page .review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.writing-review-page .q-card {
+  border-radius: 14px !important;
+}
+
+.writing-review-page .q-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.writing-review-page .q-prompt {
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 8px;
+  white-space: pre-line;
+}
+
+.writing-review-page .q-answer {
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.writing-review-page .q-answer b {
+  font-size: 14px;
+}
+
+.writing-review-page .q-text {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.writing-review-page .q-ai {
+  margin-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 8px;
+}
+
+.writing-review-page .ai-feedback {
+  margin-top: 8px;
+  font-size: 14px;
+  white-space: pre-line;
+}
+
+.writing-review-page .ai-study {
+  margin-top: 6px;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.writing-review-page .ai-study li {
+  margin-bottom: 2px;
+}
+
+/* center spinner */
+.writing-review-page .center,
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .writing-review-page {
+    padding: 8px;
+  }
+
+  .writing-review-page .review-summary {
+    grid-template-columns: 1fr;
+  }
+}

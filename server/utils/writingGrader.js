@@ -6,14 +6,14 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 // map TOEIC Writing 0–200 -> level 1–8
 function mapToeicWritingLevel(score) {
-  if (score <= 30) return 1;      // Level 1: 0–30
-  if (score <= 50) return 2;      // Level 2: 40–50
-  if (score <= 70) return 3;      // Level 3: 60–70
-  if (score <= 100) return 4;     // Level 4: 80–100
-  if (score <= 130) return 5;     // Level 5: 110–130
-  if (score <= 160) return 6;     // Level 6: 140–160
-  if (score <= 170) return 7;     // Level 7: ~170
-  return 8;                       // Level 8: 180–200
+  if (score <= 30) return 1; // Level 1: 0–30
+  if (score <= 50) return 2; // Level 2: 40–50
+  if (score <= 70) return 3; // Level 3: 60–70
+  if (score <= 100) return 4; // Level 4: 80–100
+  if (score <= 130) return 5; // Level 5: 110–130
+  if (score <= 160) return 6; // Level 6: 140–160
+  if (score <= 170) return 7; // Level 7: ~170
+  return 8; // Level 8: 180–200
 }
 
 // helper cắt ```json ... ``` nếu model trả về dạng code block
@@ -26,7 +26,12 @@ function extractJson(text = "") {
   return jsonStr;
 }
 
-export async function gradeWriting({ prompt, answerText, rubric, level = "TOEIC" }) {
+export async function gradeWriting({
+  prompt,
+  answerText,
+  rubric,
+  level = "TOEIC",
+}) {
   if (!GEMINI_API_KEY) {
     throw new Error("GEMINI_API_KEY chưa được cấu hình trong .env");
   }
@@ -38,24 +43,41 @@ Nhiệm vụ:
 - Đọc đề bài (prompt) và bài viết của thí sinh.
 - Chấm bài theo 4 tiêu chí: Task achievement, Grammar, Vocabulary, Organization.
 - Đưa ra điểm Overall và quy đổi sang thang điểm TOEIC Writing 0–200.
+- Đánh giá band (mức độ) cho từng tiêu chí và gợi ý lộ trình học tập.
 
 YÊU CẦU ĐẦU RA:
 - CHỈ trả về một JSON thuần (không giải thích, không thêm text ngoài JSON).
 - Cấu trúc JSON:
 
 {
-  "taskScore": number,          // 0–5
-  "grammarScore": number,       // 0–5
-  "vocabularyScore": number,    // 0–5
-  "organizationScore": number,  // 0–5
-  "overallScore": number,       // 0–5
-  "predictedToeicScore": number,// 0–200
-  "feedback": string            // Nhận xét khoảng 4–6 câu, bằng TIẾNG VIỆT, dễ hiểu.
+  "taskScore": number,           // 0–5
+  "grammarScore": number,        // 0–5
+  "vocabularyScore": number,     // 0–5
+  "organizationScore": number,   // 0–5
+  "overallScore": number,        // 0–5
+  "predictedToeicScore": number, // 0–200
+
+  "bands": {
+    "task": string,              // ví dụ: "B1", "Khá", ...
+    "grammar": string,
+    "vocabulary": string,
+    "organization": string
+  },
+
+  "feedback": string,            // Nhận xét tổng quan 4–6 câu, bằng TIẾNG VIỆT, dễ hiểu.
+
+  "studyPlan": [                 // 3–6 gạch đầu dòng, tiếng Việt
+    "Gợi ý 1...",
+    "Gợi ý 2...",
+    "Gợi ý 3..."
+  ]
 }
 
 Lưu ý:
-- Các điểm *Score phải nằm trong khoảng 0–5.
+- Các *Score phải nằm trong khoảng 0–5.
 - "predictedToeicScore" phải nằm trong khoảng 0–200.
+- "bands" không được thiếu key; nếu khó xác định có thể trả về "Không rõ".
+- "studyPlan" nên tập trung vào ngữ pháp, từ vựng, cách triển khai ý, luyện đề TOEIC Writing.
 `;
 
   const userContent = `
@@ -100,8 +122,7 @@ ${rubric || "(không có ghi chú thêm)"}
   const data = await res.json();
 
   // Lấy text từ candidates
-  const text =
-    data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
   if (!text) {
     console.error("Gemini trả về rỗng, raw:", JSON.stringify(data));
@@ -122,6 +143,17 @@ ${rubric || "(không có ghi chú thêm)"}
       organizationScore: 3,
       overallScore: 3,
       predictedToeicScore: 120,
+      bands: {
+        task: "Trung bình",
+        grammar: "Trung bình",
+        vocabulary: "Trung bình",
+        organization: "Trung bình",
+      },
+      studyPlan: [
+        "Ôn lại các cấu trúc câu cơ bản (thì, mệnh đề quan hệ, câu điều kiện).",
+        "Tập viết đoạn văn 120–150 từ, chú ý dùng từ nối và chia đoạn rõ ràng.",
+        "Luyện viết lại một số câu trong bài bằng từ vựng đa dạng hơn.",
+      ],
       feedback:
         "Hệ thống gặp lỗi khi phân tích kết quả từ AI. Điểm tạm thời là 3/5 cho các tiêu chí, tương đương khoảng 120/200. Vui lòng thử chấm lại sau khi hệ thống ổn định.",
     };
@@ -148,6 +180,25 @@ ${rubric || "(không có ghi chú thêm)"}
 
   const toeicLevel = mapToeicWritingLevel(predicted);
 
+  const bands =
+    parsed.bands && typeof parsed.bands === "object"
+      ? {
+          task: parsed.bands.task || "Không rõ",
+          grammar: parsed.bands.grammar || "Không rõ",
+          vocabulary: parsed.bands.vocabulary || "Không rõ",
+          organization: parsed.bands.organization || "Không rõ",
+        }
+      : {
+          task: "Không rõ",
+          grammar: "Không rõ",
+          vocabulary: "Không rõ",
+          organization: "Không rõ",
+        };
+
+  const studyPlan = Array.isArray(parsed.studyPlan)
+    ? parsed.studyPlan.filter((s) => typeof s === "string" && s.trim())
+    : [];
+
   return {
     taskScore,
     grammarScore,
@@ -156,6 +207,8 @@ ${rubric || "(không có ghi chú thêm)"}
     overallScore,
     predictedToeicScore: predicted,
     toeicWritingLevel: toeicLevel,
+    bands,
+    studyPlan,
     feedback:
       typeof parsed.feedback === "string"
         ? parsed.feedback

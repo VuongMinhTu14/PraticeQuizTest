@@ -7,6 +7,8 @@ import UsersAdmin from "./pages/usersAdmin/UsersAdmin";
 import ToeicSetAdmin from "./pages/toeicSetAdmin/ToeicSetAdmin";
 import ToeicQuestionsAdmin from "./pages/toeicQuestionsAdmin/ToeicQuestionsAdmin";
 import ToeicWritingAdmin from "./pages/toeicWritingAdmin/toeicWritingAdmin";
+import ToeicSetWritingAdmin from "./pages/toeicSetWritingAdmin/ToeicSetWritingAdmin";
+import ToeicWritingQuestionsAdmin from "./pages/toeicWritingQuestionsAdmin/ToeicWritingQuestionsAdmin";
 import "./App.css";
 import { getMe } from "./api/adminApi.js";
 
@@ -58,7 +60,8 @@ function App() {
                   <Route path="/users" element={<UsersAdmin />} />
                   <Route path="/toeic-sets" element={<ToeicSetAdmin />} />
                   <Route path="/toeic-questions" element={<ToeicQuestionsAdmin />} />
-                  <Route path="/toeic-writing-sets" element={<ToeicWritingAdmin />} />
+                  <Route path="/toeic-writing-sets" element={<ToeicSetWritingAdmin />}/>
+                  <Route path="/toeic-writing-questions" element={<ToeicWritingQuestionsAdmin />}/>
                 </Routes>
               </AdminLayout>
             </RequireAuth>

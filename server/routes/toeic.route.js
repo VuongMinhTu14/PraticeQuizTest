@@ -19,6 +19,7 @@ import {
   getMyToeicRecentAttempts,
   adminUploadQuestionImage,
   adminUploadQuestionAudio,
+  getAttemptReview,
 } 
 from "../controllers/toeic.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
@@ -50,6 +51,6 @@ router.post("/admin/sets/:setId/questions/import", adminImportQuestions);
 router.get("/sets/:id/questions", listQuestionsForUser);
 router.post("/admin/questions/:id/upload-image", adminUploadQuestionImage);
 router.post("/admin/questions/:id/upload-audio", adminUploadQuestionAudio);
-
+router.get("/attempts/:id/review", verifyToken, getAttemptReview);
 
 export default router;

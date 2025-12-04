@@ -216,34 +216,49 @@ const AttemptPage = () => {
   const isFullTest = (meta?.selectedParts || []).length >= 7;
 
   // ===== SUBMIT =====
-  const doSubmit = async () => {
-    try {
-      setSubmitting(true);
-      const payloadAnswers = questions
-        .map((q) => ({
-          questionId: q.id,
-          selectedOption: answers[q.id] || null,
-        }))
-        .filter((a) => !!a.selectedOption);
+const doSubmit = async () => {
+  try {
+    setSubmitting(true);
+    const payloadAnswers = questions
+      .map((q) => ({
+        questionId: q.id,
+        selectedOption: answers[q.id] || null,
+      }))
+      .filter((a) => !!a.selectedOption);
 
-      const res = await submitToeicAttempt(attemptId, payloadAnswers);
-      if (!res?.ok) {
-        msgApi.error(res?.msg || "Nộp bài thất bại");
-        return;
-      }
-      const result = res.data;
-      msgApi.success("Nộp bài thành công!");
-
-      navigate(`/practice/${result.setId}`, {
-        state: { lastResult: result },
-      });
-    } catch (err) {
-      console.error("submit attempt error:", err);
-      msgApi.error("Không nộp được bài, thử lại sau");
-    } finally {
-      setSubmitting(false);
+    const res = await submitToeicAttempt(attemptId, payloadAnswers);
+    if (!res?.ok) {
+      msgApi.error(res?.msg || "Nộp bài thất bại");
+      return;
     }
-  };
+
+    const d = res.data; // server trả về data trong submitAttempt
+
+    msgApi.success("Nộp bài thành công!");
+
+    // 🚀 ĐI TỚI TRANG RESULT THAY VÌ /practice/:setId
+    navigate(`/attempt/${d.attemptId}/result`, {
+      state: {
+        resultData: {
+          attemptId: d.attemptId,
+          setId: d.setId,
+          setTitle: meta?.setTitle,
+          mode: d.mode,
+          selectedParts: d.selectedParts,
+          totalQuestions: d.totalQuestions,
+          totalCorrect: d.totalCorrect,
+          scorePercent: d.scorePercent,
+          scoreByPart: d.scoreByPart,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("submit attempt error:", err);
+    msgApi.error("Không nộp được bài, thử lại sau");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleSubmit = () => {
     if (!questions.length) return;
@@ -252,7 +267,7 @@ const AttemptPage = () => {
       content: "Sau khi nộp sẽ không chỉnh sửa được đáp án.",
       okText: "Nộp bài",
       cancelText: "Hủy",
-      onOk: () => doSubmit(),
+      onOk: () => doSubmit(), // ✅ chỉ gọi doSubmit ở đây
     });
   };
 

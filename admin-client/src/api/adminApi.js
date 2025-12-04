@@ -26,7 +26,6 @@ export const loginAdmin = async (email, password) => {
 
   const { user, token } = data;
 
-  // CHỈ CHO ROLE ADMIN
   if (user.role !== "admin") {
     throw new Error("Tài khoản này không có quyền quản trị (role admin).");
   }
@@ -75,7 +74,7 @@ export const deleteUser = async (userId) => {
 
 // ===== TOEIC SETS (ADMIN) =====
 export const getToeicSetsAdmin = async () => {
-  const res = await api.get("/toeic/admin/sets");   // 👈 /toeic/admin/sets
+  const res = await api.get("/toeic/admin/sets");
   if (!res.data.ok) throw new Error(res.data.msg || "Load sets fail");
   return res.data.data;
 };
@@ -99,11 +98,7 @@ export const deleteToeicSetAdmin = async (id) => {
 };
 
 // ===== TOEIC QUESTIONS (ADMIN) =====
-
-// list câu hỏi theo set + part
-// -> GET /toeic/admin/sets/:setId/questions?partKey=p3
 export const getToeicQuestionsAdmin = async (setId, partKey) => {
-  const params = partKey ? { partKey } : undefined;
   const res = await api.get(`/toeic/admin/sets/${setId}/questions`, {
     params: { partKey },
   });
@@ -111,7 +106,6 @@ export const getToeicQuestionsAdmin = async (setId, partKey) => {
   return res.data.data;
 };
 
-// import câu hỏi: POST /toeic/admin/sets/:setId/questions/import
 export const importToeicQuestionsAdmin = async (setId, partKey, questions) => {
   const res = await api.post(
     `/toeic/admin/sets/${setId}/questions/import`,
@@ -121,7 +115,6 @@ export const importToeicQuestionsAdmin = async (setId, partKey, questions) => {
   return res.data;
 };
 
-// xoá 1 câu hỏi: DELETE /toeic/admin/questions/:id
 export const deleteToeicQuestionAdmin = async (id) => {
   const res = await api.delete(`/toeic/admin/questions/${id}`);
   if (!res.data.ok) throw new Error(res.data.msg || "Delete question fail");
@@ -129,19 +122,17 @@ export const deleteToeicQuestionAdmin = async (id) => {
 };
 
 export const createToeicQuestionAdmin = async (setId, partKey, payload) => {
-  // payload: { number, questionText, choices, correctOption, ... }
   const res = await api.post(`/toeic/admin/sets/${setId}/questions`, {
     partKey,
     ...payload,
   });
-
   if (!res.data.ok) {
     throw new Error(res.data.msg || "Create question fail");
   }
   return res.data;
 };
 
-// Lấy danh sách tất cả đề writing (draft + published)
+// ===== TOEIC WRITING SETS (ADMIN) =====
 export const adminListWritingSets = async () => {
   const res = await api.get("/toeic-writing/admin/sets");
   const data = res.data;
@@ -149,15 +140,13 @@ export const adminListWritingSets = async () => {
   return data.items;
 };
 
-// Tạo đề writing mới
 export const adminCreateWritingSet = async (payload) => {
   const res = await api.post("/toeic-writing/admin/sets", payload);
   const data = res.data;
   if (!data.ok) throw new Error(data.msg || "Tạo đề writing thất bại");
-  return data.data; // { id: ... }
+  return data.data;
 };
 
-// Cập nhật đề writing
 export const adminUpdateWritingSet = async (id, payload) => {
   const res = await api.put(`/toeic-writing/admin/sets/${id}`, payload);
   const data = res.data;
@@ -165,7 +154,6 @@ export const adminUpdateWritingSet = async (id, payload) => {
   return data.data;
 };
 
-// Xoá đề writing
 export const adminDeleteWritingSet = async (id) => {
   const res = await api.delete(`/toeic-writing/admin/sets/${id}`);
   const data = res.data;
@@ -173,6 +161,60 @@ export const adminDeleteWritingSet = async (id) => {
   return true;
 };
 
+// ===== TOEIC WRITING QUESTIONS (ADMIN) =====
+export const adminGetWritingQuestions = async (setId, partKey) => {
+  const res = await api.get(
+    `/toeic-writing/admin/sets/${setId}/questions`,
+    { params: { partKey } }
+  );
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy câu hỏi writing");
+  // controller trả về { ok, data: [...] }
+  return data.data;
+};
+
+export const adminCreateWritingQuestion = async (setId, partKey, payload) => {
+  const res = await api.post(
+    `/toeic-writing/admin/sets/${setId}/questions`,
+    { partKey, ...payload }
+  );
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi tạo câu hỏi writing");
+  return data.data;
+};
+
+export const adminImportWritingQuestions = async (
+  setId,
+  partKey,
+  questions
+) => {
+  const res = await api.post(
+    `/toeic-writing/admin/sets/${setId}/questions/import`,
+    { partKey, questions }
+  );
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Import câu hỏi writing lỗi");
+  return data.data;
+};
+
+export const adminDeleteWritingQuestion = async (id) => {
+  const res = await api.delete(`/toeic-writing/admin/questions/${id}`);
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Xoá câu hỏi writing thất bại");
+  return true;
+};
+
+export const adminUploadWritingQuestionImage = async (questionId, file) => {
+  const formData = new FormData();
+  formData.append("file", file); // backend nhận field "file"
+  const res = await api.post(
+    `/toeic-writing/admin/questions/${questionId}/upload-image`,
+    formData
+  );
+  return res.data;
+};
+
+// ===== TOEIC MEDIA (L&R) =====
 export const uploadToeicQuestionImageAdmin = async (questionId, file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -190,7 +232,5 @@ export const uploadToeicQuestionAudioAdmin = async (questionId, file) => {
     `/toeic/admin/questions/${questionId}/upload-audio`,
     formData
   );
-  return res.data; 
+  return res.data;
 };
-
-

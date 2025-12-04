@@ -4,7 +4,7 @@ import { Carousel, Card, Table, Empty, Spin, Row, Col } from "antd";
 import { SmileTwoTone } from "@ant-design/icons";
 import { Line } from "@ant-design/plots";
 import { useQuery } from "@tanstack/react-query";
-
+import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../utils/authStore";
 import {
   getMyToeicRecentAttempts,
@@ -15,6 +15,7 @@ import "./dashboard.css";
 
 const Dashboard = () => {
   const { currentUser } = useAuthStore();
+  const navigate = useNavigate();
 
   const username =
     currentUser?.username || currentUser?.displayName || "User";
@@ -36,7 +37,24 @@ const Dashboard = () => {
     enabled: !!userId, // chỉ gọi khi đã có user
   });
 
-  const toeicAttempts = toeicAttemptsRaw || [];
+  const toeicAttempts = useMemo(() => {
+    return (toeicAttemptsRaw || []).map((a) => {
+      const sbp = a.scoreByPart || [];
+
+      const partSummary = sbp.length
+        ? sbp
+            .map(
+              (p) =>
+                `${p.partKey.toUpperCase()}: ${p.correct}/${p.total} (${p.percent}%)`
+            )
+            .join(" · ")
+        : "";
+      return {
+        ...a,
+        partSummary,
+      };
+    });
+  }, [toeicAttemptsRaw]);
 
   // ===== FETCH WRITING =====
   const {
@@ -82,11 +100,15 @@ const Dashboard = () => {
 
     return sorted.map((a) => {
       const d = new Date(a.createdAt);
+      const score =
+        a.predictedToeicScore ??
+        a.scores?.predictedToeicScore ??
+        0;
+
       return {
-        // trục X là tên đề (category)
         label: a.setTitle || "Đề không tên",
-        score: a.predictedToeicScore ?? 0,
-        dateLabel: d.toLocaleString("vi-VN"), // dùng cho tooltip
+        score,
+        dateLabel: d.toLocaleString("vi-VN"),
       };
     });
   }, [writingAttempts]);
@@ -180,6 +202,22 @@ const Dashboard = () => {
           ? `${r.totalCorrect}/${r.totalQuestions}`
           : "-",
     },
+    {
+      title: "Chi tiết theo Part",
+      dataIndex: "partSummary",
+      render: (v) => v || "-",
+    },
+    {
+      title: "",
+      render: (_, record) => (
+        <a
+          style={{ color: "#2563eb", cursor: "pointer" }}
+          onClick={() => navigate(`/attempt/${record.id}/review`)}
+        >
+          Xem chi tiết
+        </a>
+      ),
+    },
   ];
 
   const writingColumns = [
@@ -194,19 +232,45 @@ const Dashboard = () => {
     },
     {
       title: "Điểm TOEIC (0–200)",
-      dataIndex: "predictedToeicScore",
-      render: (v) => (v == null ? "-" : v),
+      render: (_, r) => {
+        const v =
+          r.predictedToeicScore ??
+          r.scores?.predictedToeicScore ??
+          null;
+        return v == null ? "-" : v;
+      },
     },
     {
       title: "Level",
-      dataIndex: "toeicWritingLevel",
-      render: (v) => (v ? `Level ${v}` : "-"),
+      render: (_, r) => {
+        const lvl =
+          r.toeicWritingLevel ??
+          r.scores?.toeicWritingLevel ??
+          null;
+        return lvl ? `Level ${lvl}` : "-";
+      },
     },
     {
       title: "Overall (0–5)",
-      dataIndex: "overallScore",
-      render: (v) =>
-        v == null ? "-" : v.toFixed ? v.toFixed(1) : v,
+      render: (_, r) => {
+        const v =
+          r.overallScore ??
+          r.scores?.overallScore ??
+          null;
+        if (v == null) return "-";
+        return v.toFixed ? v.toFixed(1) : v;
+      },
+    },
+    {
+      title: "",
+      render: (_, r) => (
+        <a
+          style={{ color: "#2563eb", cursor: "pointer" }}
+          onClick={() => navigate(`/attempt-writing/${r.id}/review`)}
+        >
+          Xem chi tiết
+        </a>
+      ),
     },
   ];
 

@@ -1,4 +1,4 @@
-.practice-writing-page {
+/* .practice-writing-page {
   padding: 32px 40px;
 }
 
@@ -177,8 +177,43 @@
   white-space: pre-line;
 }
 
+.band-card,
+.studyplan-card {
+  margin-top: 16px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.band-title,
+.studyplan-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.band-list,
+.studyplan-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.band-list li,
+.studyplan-list li {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.band-list li span {
+  color: #6b7280;
+  margin-right: 4px;
+}
+
 @media (max-width: 900px) {
   .writing-result .result-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+ */
