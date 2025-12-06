@@ -7,31 +7,35 @@ import {
   QuestionCircleOutlined,
   TeamOutlined,
   LineChartOutlined,
-  CrownFilled,
+  EditOutlined,
 } from "@ant-design/icons";
 
 const PracticeCardWriting = ({ item }) => {
-  const minutes = Math.round((item?.durationSec ?? 0) / 60);
-  const isPremium = !item?.isFree;
+  const minutes = Math.round((item?.durationSec ?? 0) / 60) || 0;
 
   return (
-    <div className={`practice-card ${isPremium ? "premium" : "free"}`}>
-      {isPremium && (
-        <div className="sticker">
-          <CrownFilled className="sticker-icon" />
-          <span>Premium</span>
-        </div>
-      )}
+    <div className="practice-card writing-card">
+      {/* Header nhỏ trên cùng */}
+      <div className="pcw-header">
+        <span className="pcw-label">
+          <EditOutlined /> TOEIC Writing
+        </span>
+        {item?.level && <span className="pcw-level">{item.level}</span>}
+      </div>
 
-      <div className="title">{item?.title ?? "TOEIC Writing Set"}</div>
+      {/* Tiêu đề đề thi */}
+      <div className="pcw-title">
+        {item?.title ?? "TOEIC Writing Practice Set"}
+      </div>
 
-      <div className="meta">
+      {/* Meta info: thời gian – số phần – số câu */}
+      <div className="pcw-meta">
         <span className="meta-chip">
           <ClockCircleOutlined /> {minutes} phút
         </span>
         <span className="dot">•</span>
         <span className="meta-chip">
-          <AppstoreOutlined /> 3 phần
+          <AppstoreOutlined /> {item?.partsCount ?? 3} phần
         </span>
         <span className="dot">•</span>
         <span className="meta-chip">
@@ -39,16 +43,18 @@ const PracticeCardWriting = ({ item }) => {
         </span>
       </div>
 
-      <div className="tags">
+      {/* Tag chủ đề */}
+      <div className="pcw-tags">
         {(item?.tags || ["writing", "email", "essay"]).map((t) => (
-          <span key={t} className="tag">
+          <span key={t} className="pcw-tag">
             #{t}
           </span>
         ))}
       </div>
 
-      <div className="footer">
-        <div className="stats">
+      {/* Footer: thống kê + nút chi tiết */}
+      <div className="pcw-footer">
+        <div className="pcw-stats">
           <span className="meta-chip">
             <TeamOutlined /> {item?.stats?.users ?? 0}
           </span>
@@ -58,10 +64,7 @@ const PracticeCardWriting = ({ item }) => {
           </span>
         </div>
 
-        <Link
-          to={`/practice/writing/${item?.id}`}
-          className="btn-detail"
-        >
+        <Link to={`/practice/writing/${item?.id}`} className="pcw-button">
           Chi tiết
         </Link>
       </div>

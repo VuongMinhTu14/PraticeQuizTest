@@ -90,6 +90,128 @@ body[data-theme="dark"] .tag { background: rgba(255,255,255,.08); }
 }
 .btn-detail:hover { opacity: .92; }
 
+/* ==== Writing card style ==== */
+.practice-card.writing-card {
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 18px 20px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.practice-card.writing-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+/* header nhỏ phía trên */
+.pcw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.pcw-label {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.pcw-level {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* title */
+.pcw-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* meta row */
+.pcw-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* reuse meta-chip, dot nếu file cũ đã có thì khỏi thêm */
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dot {
+  margin: 0 4px;
+  color: #d1d5db;
+}
+
+/* tags */
+.pcw-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.pcw-tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* footer */
+.pcw-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pcw-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* button Chi tiết */
+.pcw-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.pcw-button:hover {
+  background: #000;
+  transform: translateY(-1px);
+}
+
+
 /* gợi ý loại card */
 .practice-card.premium { border-top: 3px solid #facc15; }
 .practice-card.free    { border-top: 3px solid #4ade80; }
