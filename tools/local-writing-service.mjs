@@ -15,11 +15,21 @@ const MODEL = process.env.LOCAL_WRITING_MODEL || "llama3.1:8b";
 const PORT = process.env.PORT || 3001;
 
 const parseJsonFromText = (text) => {
+  // cố gắng tìm JSON thuần trong đoạn text
   const firstBrace = text.indexOf("{");
   const lastBrace = text.lastIndexOf("}");
   if (firstBrace >= 0 && lastBrace > firstBrace) {
     const jsonSlice = text.slice(firstBrace, lastBrace + 1);
-    return JSON.parse(jsonSlice);
+    try {
+      return JSON.parse(jsonSlice);
+    } catch (e) {
+      // tiếp tục fallback bên dưới
+    }
+  }
+  // fallback: tìm bằng regex
+  const match = text.match(/\{[\s\S]*\}/);
+  if (match) {
+    return JSON.parse(match[0]);
   }
   return JSON.parse(text);
 };
@@ -60,4 +70,3 @@ app.listen(PORT, () => {
     `Model: ${MODEL} | Ollama host: ${process.env.OLLAMA_HOST || "http://localhost:11434"}`
   );
 });
-
