@@ -32,6 +32,53 @@
   color: #111827;
 }
 
+.attempt-alert {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.attempt-alert.success {
+  background: #ecfdf3;
+  border-color: #22c55e33;
+  color: #166534;
+}
+
+.attempt-alert.error {
+  background: #fef2f2;
+  border-color: #ef444433;
+  color: #991b1b;
+}
+
+.criteria-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.criteria-row span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(17, 24, 39, 0.04);
+  color: #111827;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.suggestion-list {
+  margin: 8px 0 4px 20px;
+  padding: 0;
+  color: #0f172a;
+  list-style: disc;
+}
+
 .attempt-timer {
   text-align: right;
 }
@@ -217,6 +264,14 @@
 .q-options .ant-radio-wrapper {
   display: block;
   margin: 2px 0;
+}
+
+.option-text-hidden {
+  display: none;
+}
+
+.option-text {
+  display: inline;
 }
 
 /* ================== NÚT NỘP & NÚT BACK ================== */

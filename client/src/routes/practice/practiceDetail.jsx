@@ -1,13 +1,12 @@
-// src/routes/practice/PracticeDetail.jsx
-import "./practiceDetail.css";
-import { useEffect, useState } from "react";
+﻿import "./practiceDetail.css";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ClockCircleOutlined,
   FileTextOutlined,
   CheckSquareOutlined,
 } from "@ant-design/icons";
-import { message } from "antd";
+import { Button, message } from "antd";
 import {
   getToeicSet,
   createToeicAttempt,
@@ -15,7 +14,7 @@ import {
 } from "../../utils/toeicApi";
 
 const PracticeDetail = () => {
-  const { id } = useParams(); // /practice/:id  (setId)
+  const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,21 +23,27 @@ const PracticeDetail = () => {
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ----- TAB -----
-  // "practice" | "full"
-  const [activeTab, setActiveTab] = useState("practice");
-
-  // ----- Luyện tập theo part -----
-  const [selected, setSelected] = useState([]); // list key part
-  const [limit, setLimit] = useState(""); // phút, '' = không giới hạn
+  const [selected, setSelected] = useState([]);
+  const [limit, setLimit] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // ----- Kết quả gần nhất -----
   const [lastResult, setLastResult] = useState(navResult);
+  const [lastAttemptLocal, setLastAttemptLocal] = useState(null);
 
   const [msgApi, contextHolder] = message.useMessage();
 
-  // ===== LOAD CHI TIẾT ĐỀ =====
+  useEffect(() => {
+    const raw = localStorage.getItem("pq_last_attempt");
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      setLastAttemptLocal(parsed);
+    } catch (e) {
+      console.error("parse pq_last_attempt failed", e);
+    }
+  }, []);
+
+  // ===== LOAD CHI TIáº¾T Äá»€ =====
   useEffect(() => {
     if (!id) return;
 
@@ -53,7 +58,8 @@ const PracticeDetail = () => {
       })
       .catch((err) => {
         console.error("getToeicSet error:", err);
-        if (alive) msgApi.error("Không tải được thông tin đề thi TOEIC");
+        if (alive)
+          msgApi.error("KhÃ´ng táº£i Ä‘Æ°á»£c thÃ´ng tin Ä‘á» thi TOEIC");
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -64,7 +70,7 @@ const PracticeDetail = () => {
     };
   }, [id, msgApi]);
 
-  // ===== LẤY KẾT QUẢ GẦN NHẤT =====
+  // ===== Láº¤Y Káº¾T QUáº¢ Gáº¦N NHáº¤T =====
   useEffect(() => {
     let alive = true;
 
@@ -98,11 +104,18 @@ const PracticeDetail = () => {
     );
   };
 
-  // ====== BẮT ĐẦU LÀM BÀI – CHẾ ĐỘ LUYỆN TẬP ======
+  const selectedProgress = useMemo(() => {
+    const total = test?.parts?.length || 0;
+    const count = selected.length;
+    const percent = total === 0 ? 0 : Math.round((count / total) * 100);
+    return { total, count, percent };
+  }, [selected, test]);
+
+  // ====== Báº®T Äáº¦U LUYá»†N THEO PART ======
   const handleStartPractice = async () => {
     if (!test) return;
     if (selected.length === 0) {
-      msgApi.warning("Chọn ít nhất 1 phần thi để luyện nha!");
+      msgApi.warning("Chá»n Ã­t nháº¥t 1 pháº§n thi Ä‘á»ƒ luyá»‡n táº­p nha!");
       return;
     }
 
@@ -113,14 +126,24 @@ const PracticeDetail = () => {
         timeLimitSec: limit ? Number(limit) * 60 : null,
       };
 
-      const res = await createToeicAttempt(test.id, payload); // { ok, attemptId }
+      const res = await createToeicAttempt(test.id, payload);
 
       if (!res.ok) {
-        msgApi.error(res.msg || "Không tạo được bài luyện tập");
+        msgApi.error(res.msg || "KhÃ´ng táº¡o Ä‘Æ°á»£c bÃ i luyá»‡n táº­p");
         return;
       }
 
-      msgApi.success("Tạo bài luyện tập thành công, bắt đầu nào!");
+      msgApi.success("Táº¡o bÃ i luyá»‡n táº­p thÃ nh cÃ´ng, báº¯t Ä‘áº§u thÃ´i!");
+      localStorage.setItem(
+        "pq_last_attempt",
+        JSON.stringify({
+          attemptId: res.attemptId,
+          setId: test.id,
+          setTitle: test.title,
+          mode: "practice",
+          createdAt: new Date().toISOString(),
+        })
+      );
       navigate(`/attempt/${res.attemptId}`);
     } catch (err) {
       console.error("createAttempt error:", err);
@@ -128,22 +151,22 @@ const PracticeDetail = () => {
       const serverMsg = err?.response?.data?.msg;
 
       if (status === 401) {
-        msgApi.warning(serverMsg || "Bạn cần đăng nhập để luyện đề");
+        msgApi.warning(serverMsg || "Báº¡n cáº§n Ä‘Äƒng nháº­p Ä‘á»ƒ luyá»‡n Ä‘á»");
       } else {
-        msgApi.error(serverMsg || "Không tạo được bài luyện tập, thử lại sau");
+        msgApi.error(serverMsg || "KhÃ´ng táº¡o Ä‘Æ°á»£c bÃ i luyá»‡n táº­p, thá»­ láº¡i sau");
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ====== BẮT ĐẦU LÀM BÀI – CHẾ ĐỘ FULL TEST ======
+  // ====== Báº®T Äáº¦U FULL TEST ======
   const handleStartFullTest = async () => {
     if (!test) return;
 
     const allParts = (test.parts || []).map((p) => p.key);
     if (allParts.length === 0) {
-      msgApi.error("Đề này chưa có cấu trúc part, không thể làm full test");
+      msgApi.error("Äá» nÃ y chÆ°a cÃ³ cáº¥u trÃºc part, khÃ´ng thá»ƒ lÃ m full test");
       return;
     }
 
@@ -152,18 +175,27 @@ const PracticeDetail = () => {
 
       const payload = {
         selectedParts: allParts,
-        // full test thì dùng đúng thời gian chuẩn của đề
         timeLimitSec: test.durationSec || null,
       };
 
       const res = await createToeicAttempt(test.id, payload);
 
       if (!res.ok) {
-        msgApi.error(res.msg || "Không tạo được full test");
+        msgApi.error(res.msg || "KhÃ´ng táº¡o Ä‘Æ°á»£c full test");
         return;
       }
 
-      msgApi.success("Full test đã sẵn sàng, cố lên nhé!");
+      msgApi.success("Full test Ä‘Ã£ sáºµn sÃ ng, cá»‘ lÃªn!");
+      localStorage.setItem(
+        "pq_last_attempt",
+        JSON.stringify({
+          attemptId: res.attemptId,
+          setId: test.id,
+          setTitle: test.title,
+          mode: "full",
+          createdAt: new Date().toISOString(),
+        })
+      );
       navigate(`/attempt/${res.attemptId}`);
     } catch (err) {
       console.error("createFullTest error:", err);
@@ -171,21 +203,20 @@ const PracticeDetail = () => {
       const serverMsg = err?.response?.data?.msg;
 
       if (status === 401) {
-        msgApi.warning(serverMsg || "Bạn cần đăng nhập để làm full test");
+        msgApi.warning(serverMsg || "Báº¡n cáº§n Ä‘Äƒng nháº­p Ä‘á»ƒ lÃ m full test");
       } else {
-        msgApi.error(serverMsg || "Không tạo được full test, thử lại sau");
+        msgApi.error(serverMsg || "KhÃ´ng táº¡o Ä‘Æ°á»£c full test, thá»­ láº¡i sau");
       }
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ===== RENDER =====
   if (!id) {
     return (
       <div className="detail-page">
         {contextHolder}
-        <p>Đường dẫn không hợp lệ (thiếu mã đề).</p>
+        <p>ÄÆ°á»ng dáº«n khÃ´ng há»£p lá»‡ (thiáº¿u mÃ£ Ä‘á»).</p>
       </div>
     );
   }
@@ -194,7 +225,7 @@ const PracticeDetail = () => {
     return (
       <div className="detail-page">
         {contextHolder}
-        <p>Đang tải thông tin đề thi...</p>
+        <p>Äang táº£i thÃ´ng tin Ä‘á» thi...</p>
       </div>
     );
   }
@@ -203,7 +234,7 @@ const PracticeDetail = () => {
     return (
       <div className="detail-page">
         {contextHolder}
-        <p>Không tìm thấy đề thi TOEIC này.</p>
+        <p>KhÃ´ng tÃ¬m tháº¥y Ä‘á» thi TOEIC nÃ y.</p>
       </div>
     );
   }
@@ -214,193 +245,226 @@ const PracticeDetail = () => {
     <div className="detail-page">
       {contextHolder}
 
-      {/* nút quay lại */}
-      <button
-        type="button"
-        className="btn-back"
-        onClick={() => navigate(-1)}
-      >
-        ← Quay lại
-      </button>
+      <Button className="btn-back" htmlType="button" onClick={() => navigate(-1)}>
+        {"<"} Quay láº¡i
+      </Button>
 
-      {/* KẾT QUẢ GẦN NHẤT */}
-      {lastResult && lastResult.setId === test.id && (
-        <div className="result-latest-box">
-          <div className="result-latest-title">Kết quả gần nhất của bạn</div>
-
-          <div className="result-summary">
-            Tổng:{" "}
-            <b>
-              {lastResult.scoreRaw}/
-              {lastResult.totalQuestions || test.totalQuestions}
-            </b>{" "}
-            câu đúng ({lastResult.scorePercent}%)
-          </div>
-
-          {Array.isArray(lastResult.scoreByPart) && (
-            <table className="result-table">
-              <thead>
-                <tr>
-                  <th>Part</th>
-                  <th>Đúng / Tổng</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lastResult.scoreByPart.map((p) => (
-                  <tr key={p.partKey}>
-                    <td>
-                      <span className="part-badge">
-                        {p.partKey.toUpperCase()}
-                      </span>
-                    </td>
-                    <td>
-                      {p.correct}/{p.total}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {/* HEADER */}
-      <div className="detail-header">
-        <div className="chip">#TOEIC</div>
-        <h1 className="title">{test.title}</h1>
-
-        <div className="header-meta">
-          <span>
-            <ClockCircleOutlined /> Thời gian làm bài: {minutes} phút
-          </span>
-          <span>•</span>
-          <span>
-            <FileTextOutlined /> {test.parts?.length || 0} phần thi
-          </span>
-          <span>•</span>
-          <span>
-            <CheckSquareOutlined /> {test.totalQuestions} câu hỏi
-          </span>
-        </div>
-
-        <div className="note">
-          <b>Luyện tập</b>: chọn part, thời gian tuỳ ý.{" "}
-          <br />
-          <b>Full test</b>: làm đủ 7 part với thời gian chuẩn, dùng để quy đổi
-          sang điểm TOEIC sát thực tế hơn.
-        </div>
-      </div>
-
-      {/* TABS */}
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === "practice" ? "active" : ""}`}
-          onClick={() => setActiveTab("practice")}
-        >
-          Luyện tập
-        </button>
-        <button
-          className={`tab ${activeTab === "full" ? "active" : ""}`}
-          onClick={() => setActiveTab("full")}
-        >
-          Full test
-        </button>
-        <button className="tab" disabled>
-          Thảo luận
-        </button>
-      </div>
-
-      {/* PANEL THEO TAB */}
-      {activeTab === "practice" && (
-        <div className="panel">
-          <div className="panel-title">Chọn phần thi bạn muốn làm</div>
-
-          <div className="parts">
-            {test.parts?.map((p) => (
-              <label
-                key={p.key}
-                className={`part ${selected.includes(p.key) ? "checked" : ""}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.includes(p.key)}
-                  onChange={() => togglePart(p.key)}
-                />
-
-                <div className="part-main">
-                  <div className="part-title">
-                    {p.name}{" "}
-                    <span className="count">({p.questions} câu hỏi)</span>
-                  </div>
-                  <div className="tag-row">
-                    {p.tags?.slice(0, 10).map((tag) => (
-                      <span key={tag} className="tag">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </label>
-            ))}
-          </div>
-
-          <div className="time-block">
-            <div className="label">
-              Giới hạn thời gian{" "}
-              <span className="hint">(để trống = không giới hạn)</span>
-            </div>
-            <select
-              className="time-select"
-              value={limit}
-              onChange={(e) => setLimit(e.target.value)}
-            >
-              <option value="">-- Chọn thời gian --</option>
-              <option value="15">15 phút</option>
-              <option value="30">30 phút</option>
-              <option value="45">45 phút</option>
-              <option value="60">60 phút</option>
-              <option value="90">90 phút</option>
-              <option value="120">120 phút</option>
-            </select>
-          </div>
-
-          <button
-            className="btn-start"
-            onClick={handleStartPractice}
-            disabled={submitting}
-          >
-            {submitting ? "Đang tạo bài luyện..." : "Luyện tập"}
-          </button>
-        </div>
-      )}
-
-      {activeTab === "full" && (
-        <div className="panel">
-          <div className="panel-title">Làm full test TOEIC</div>
-          <p style={{ marginBottom: 12, fontSize: 14 }}>
-            Bạn sẽ làm <b>đủ {test.parts?.length || 0} part</b> với tổng cộng{" "}
-            <b>{test.totalQuestions}</b> câu hỏi trong vòng{" "}
-            <b>{minutes} phút</b>. Hệ thống sẽ tính điểm tổng quát và lưu vào
-            dashboard.
+      <div className="detail-hero-card">
+        <div>
+          <div className="chip">#TOEIC</div>
+          <h1 className="title">{test.title}</h1>
+          <p className="hero-note">
+            Luyá»‡n theo part hoáº·c lÃ m full test vá»›i thá»i gian chuáº©n, Ä‘iá»ƒm sáº½ lÆ°u
+            vá» dashboard cá»§a báº¡n.
           </p>
 
-          <ul style={{ fontSize: 14, marginLeft: 18, marginBottom: 16 }}>
-            <li>Listening: Parts 1–4 (có audio + hình).</li>
-            <li>Reading: Parts 5–7.</li>
-            <li>Bạn chỉ có 1 bộ thời gian duy nhất cho toàn bài.</li>
-          </ul>
-
-          <button
-            className="btn-start"
-            onClick={handleStartFullTest}
-            disabled={submitting}
-          >
-            {submitting ? "Đang tạo full test..." : "Bắt đầu full test"}
-          </button>
+          <div className="hero-meta">
+            <span>
+              <ClockCircleOutlined /> Thá»i gian: {minutes} phÃºt
+            </span>
+            <span>|</span>
+            <span>
+              <FileTextOutlined /> {test.parts?.length || 0} pháº§n thi
+            </span>
+            <span>|</span>
+            <span>
+              <CheckSquareOutlined /> {test.totalQuestions} cÃ¢u há»i
+            </span>
+          </div>
         </div>
-      )}
+
+        <div className="hero-side">
+          <div className="info-block">
+            <div className="info-label">Tá»•ng quan</div>
+            <div className="info-row">
+              <span>Thá»i lÆ°á»£ng</span>
+              <strong>{minutes} phÃºt</strong>
+            </div>
+            <div className="info-row">
+              <span>Part</span>
+              <strong>{test.parts?.length || 0}</strong>
+            </div>
+            <div className="info-row">
+              <span>Tá»•ng cÃ¢u</span>
+              <strong>{test.totalQuestions}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="detail-grid">
+        <div className="detail-left">
+          {lastAttemptLocal?.setId === test.id && (
+            <div className="resume-card">
+              <div>
+                <div className="resume-title">Báº¡n cÃ²n dá»Ÿ má»™t láº§n lÃ m</div>
+                <div className="resume-sub">Äá»: {lastAttemptLocal.setTitle || test.title}</div>
+              </div>
+              <Button
+                type="primary"
+                className="resume-btn"
+                onClick={() => navigate(`/attempt/${lastAttemptLocal.attemptId}`)}
+              >
+                Tiáº¿p tá»¥c
+              </Button>
+            </div>
+          )}
+
+          {lastResult && lastResult.setId === test.id && (
+            <div className="result-card">
+              <div className="result-header">
+                <div>
+                  <p className="sub">Káº¿t quáº£ gáº§n nháº¥t</p>
+                  <h3>{lastResult.scorePercent}%</h3>
+                </div>
+                <div className="score-box">
+                  <div>ÄÃºng</div>
+                  <strong>
+                    {lastResult.scoreRaw}/
+                    {lastResult.totalQuestions || test.totalQuestions}
+                  </strong>
+                </div>
+              </div>
+
+              {Array.isArray(lastResult.scoreByPart) && (
+                <div className="result-parts">
+                  {lastResult.scoreByPart.map((p) => (
+                    <span key={p.partKey} className="part-badge">
+                      {p.partKey.toUpperCase()}: {p.correct}/{p.total}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="tags-block">
+            <div className="label">Tags</div>
+            <div className="tag-row">
+              {(test.parts || [])
+                .flatMap((p) => p.tags || [])
+                .slice(0, 20)
+                .map((tag) => (
+                  <span key={tag} className="tag">
+                    #{tag}
+                  </span>
+                ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="detail-right">
+          <div className="panel action-card">
+            <div className="panel-title">Luyá»‡n theo part</div>
+            <p className="muted">
+              Chá»n part báº¡n muá»‘n luyá»‡n, Ä‘áº·t thá»i gian (tuá»³ chá»n) vÃ  báº¯t Ä‘áº§u.
+            </p>
+
+            <div className="progress">
+              <div className="progress-head">
+                <span>
+                  ÄÃ£ chá»n {selectedProgress.count}/{selectedProgress.total} part
+                </span>
+                <span>{selectedProgress.percent}%</span>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${selectedProgress.percent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="parts">
+              {test.parts?.map((p) => (
+                <label
+                  key={p.key}
+                  className={`part ${
+                    selected.includes(p.key) ? "checked" : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(p.key)}
+                    onChange={() => togglePart(p.key)}
+                  />
+
+                  <div className="part-main">
+                    <div className="part-title">
+                      {p.name}{" "}
+                      <span className="count">({p.questions} cÃ¢u há»i)</span>
+                    </div>
+                    <div className="tag-row">
+                      {p.tags?.slice(0, 10).map((tag) => (
+                        <span key={tag} className="tag">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="time-block">
+              <div className="label">
+                Giá»›i háº¡n thá»i gian{" "}
+                <span className="hint">(Ä‘á»ƒ trá»‘ng = khÃ´ng giá»›i háº¡n)</span>
+              </div>
+              <select
+                className="time-select"
+                value={limit}
+                onChange={(e) => setLimit(e.target.value)}
+              >
+                <option value="">-- Chá»n thá»i gian --</option>
+                <option value="15">15 phÃºt</option>
+                <option value="30">30 phÃºt</option>
+                <option value="45">45 phÃºt</option>
+                <option value="60">60 phÃºt</option>
+                <option value="90">90 phÃºt</option>
+                <option value="120">120 phÃºt</option>
+              </select>
+            </div>
+
+            <Button
+              className="btn-start"
+              block
+              onClick={handleStartPractice}
+              loading={submitting}
+            >
+              {submitting ? "Äang táº¡o bÃ i luyá»‡n..." : "Luyá»‡n theo part"}
+            </Button>
+          </div>
+
+          <div className="panel action-card full-card">
+            <div className="panel-title">Full test</div>
+            <p className="muted">
+              LÃ m {test.parts?.length || 0} part ({test.totalQuestions} cÃ¢u) trong{" "}
+              {minutes} phÃºt theo thá»i gian chuáº©n. Äiá»ƒm lÆ°u vÃ o dashboard.
+            </p>
+
+            <ul className="bullet">
+              <li>Listening: Parts 1-4 (audio + hÃ¬nh).</li>
+              <li>Reading: Parts 5-7.</li>
+              <li>Má»™t bá»™ thá»i gian chung cho toÃ n bÃ i.</li>
+            </ul>
+
+            <Button
+              type="primary"
+              className="btn-start"
+              block
+              onClick={handleStartFullTest}
+              loading={submitting}
+            >
+              {submitting ? "Äang táº¡o full test..." : "Báº¯t Ä‘áº§u full test"}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default PracticeDetail;
+
+

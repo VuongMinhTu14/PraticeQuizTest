@@ -4,7 +4,6 @@ import fs from "fs";
 import path from "path";
 import User from "../models/user.model.js";
 
-// Tạo JWT token
 const signToken = (payload) =>
   jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
 
@@ -18,22 +17,16 @@ export const register = async (req, res) => {
     let { username, displayName, email, password } = req.body;
 
     if (!username || !displayName || !email || !password) {
-      return res
-        .status(400)
-        .json({ ok: false, msg: "Thiếu thông tin đăng ký" });
+      return res.status(400).json({ ok: false, msg: "Thiếu thông tin đăng ký" });
     }
 
     email = email.trim().toLowerCase();
 
-    // Kiểm tra trùng email
     const existed = await User.findOne({ email });
     if (existed) {
-      return res
-        .status(409)
-        .json({ ok: false, msg: "Email đã được sử dụng!" });
+      return res.status(409).json({ ok: false, msg: "Email đã được sử dụng" });
     }
 
-    // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
@@ -53,7 +46,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       ok: true,
-      msg: "Đăng ký thành công!",
+      msg: "Đăng ký thành công",
       user: {
         id: newUser._id,
         username: newUser.username,
@@ -67,9 +60,7 @@ export const register = async (req, res) => {
     });
   } catch (err) {
     console.error("REGISTER ERROR:", err);
-    res
-      .status(500)
-      .json({ ok: false, msg: "Lỗi server", error: err.message });
+    res.status(500).json({ ok: false, msg: "Lỗi server", error: err.message });
   }
 };
 
@@ -79,25 +70,23 @@ export const login = async (req, res) => {
     let { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ ok: false, msg: "Thiếu email hoặc mật khẩu" });
+      return res.status(400).json({ ok: false, msg: "Thiếu email hoặc mật khẩu" });
     }
 
     email = email.trim().toLowerCase();
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(401)
-        .json({ ok: false, msg: "Email không tồn tại" });
+      return res.status(401).json({ ok: false, msg: "Email không tồn tại" });
     }
 
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ ok: false, msg: "Mật khẩu không đúng" });
+      return res.status(401).json({ ok: false, msg: "Mật khẩu không đúng" });
+    }
+
+    if (user.status === "disabled") {
+      return res.status(403).json({ ok: false, msg: "Tài khoản đã bị khóa" });
     }
 
     const token = signToken({
@@ -122,15 +111,12 @@ export const login = async (req, res) => {
     });
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    res
-      .status(500)
-      .json({ ok: false, msg: "Lỗi server", error: err.message });
+    res.status(500).json({ ok: false, msg: "Lỗi server", error: err.message });
   }
 };
 
 /* ===================== PROFILE ===================== */
 
-// Lấy user hiện tại (dùng token)
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-hashedPassword");
@@ -156,11 +142,10 @@ export const getMe = async (req, res) => {
   }
 };
 
-// Cập nhật tên hiển thị
+// Update profile
 export const updateProfile = async (req, res) => {
   try {
     const { displayName, username } = req.body;
-
     const updates = {};
 
     if (displayName && displayName.trim()) {
@@ -176,7 +161,6 @@ export const updateProfile = async (req, res) => {
         .json({ ok: false, msg: "Không có dữ liệu để cập nhật" });
     }
 
-    // Nếu đổi username thì check trùng
     if (updates.username) {
       const existed = await User.findOne({
         username: updates.username,
@@ -216,9 +200,7 @@ export const updateProfile = async (req, res) => {
 export const uploadAvatar = async (req, res) => {
   try {
     if (!req.files || !req.files.avatar) {
-      return res
-        .status(400)
-        .json({ ok: false, msg: "Không có file avatar" });
+      return res.status(400).json({ ok: false, msg: "Không có file avatar" });
     }
 
     const file = req.files.avatar;
@@ -236,7 +218,7 @@ export const uploadAvatar = async (req, res) => {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const ext = path.extname(file.name); // .jpg, .png...
+    const ext = path.extname(file.name);
     const fileName = `avatar_${req.user.id}_${Date.now()}${ext}`;
     const savePath = path.join(uploadDir, fileName);
 

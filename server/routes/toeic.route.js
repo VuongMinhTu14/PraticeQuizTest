@@ -22,7 +22,7 @@ import {
   getAttemptReview,
 } 
 from "../controllers/toeic.controller.js";
-import { verifyToken } from "../middlewares/verifyToken.js";
+import { verifyToken, requireAdmin } from "../middlewares/verifyToken.js";
 
 const router = Router();
 
@@ -35,22 +35,22 @@ router.get("/sets/:id/last-attempt", verifyToken, getToeicLastAttempt);
 router.get("/my/recent-attempts", verifyToken, getMyToeicRecentAttempts);
 
 //ADMIN
-router.get("/admin/sets", adminListSets);
-router.post("/admin/sets", adminCreateSet);
-router.put("/admin/sets/:id", adminUpdateSet);
-router.delete("/admin/sets/:id", adminDeleteSet);
+router.get("/admin/sets", verifyToken, requireAdmin, adminListSets);
+router.post("/admin/sets", verifyToken, requireAdmin, adminCreateSet);
+router.put("/admin/sets/:id", verifyToken, requireAdmin, adminUpdateSet);
+router.delete("/admin/sets/:id", verifyToken, requireAdmin, adminDeleteSet);
 
 //ADMIN - QUESTIONS
-router.get("/admin/sets/:setId/questions", adminListQuestions);
-router.post("/admin/sets/:setId/questions", adminCreateQuestion);
-router.put("/admin/questions/:id", adminUpdateQuestion);
-router.delete("/admin/questions/:id", adminDeleteQuestion);
-router.post("/admin/sets/:setId/questions/import", adminImportQuestions);
+router.get("/admin/sets/:setId/questions", verifyToken, requireAdmin, adminListQuestions);
+router.post("/admin/sets/:setId/questions", verifyToken, requireAdmin, adminCreateQuestion);
+router.put("/admin/questions/:id", verifyToken, requireAdmin, adminUpdateQuestion);
+router.delete("/admin/questions/:id", verifyToken, requireAdmin, adminDeleteQuestion);
+router.post("/admin/sets/:setId/questions/import", verifyToken, requireAdmin, adminImportQuestions);
 
 //PUBLIC - QUESTIONS
 router.get("/sets/:id/questions", listQuestionsForUser);
-router.post("/admin/questions/:id/upload-image", adminUploadQuestionImage);
-router.post("/admin/questions/:id/upload-audio", adminUploadQuestionAudio);
+router.post("/admin/questions/:id/upload-image", verifyToken, requireAdmin, adminUploadQuestionImage);
+router.post("/admin/questions/:id/upload-audio", verifyToken, requireAdmin, adminUploadQuestionAudio);
 router.get("/attempts/:id/review", verifyToken, getAttemptReview);
 
 export default router;

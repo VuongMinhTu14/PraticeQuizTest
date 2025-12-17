@@ -9,6 +9,7 @@ import userRouter from "./routes/user.route.js";
 import toeicRouter from "./routes/toeic.route.js";
 import adminRouter from "./routes/admin.route.js";
 import toeicWritingRouter from "./routes/toeicWriting.route.js";
+import predictionRouter from "./routes/prediction.route.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -37,6 +38,7 @@ app.use("/user", userRouter);
 app.use("/toeic", toeicRouter);
 app.use("/admin", adminRouter);
 app.use("/toeic-writing", toeicWritingRouter);
+app.use("/prediction", predictionRouter);
 
 app.use((err, req, res, next) => {
   console.error("Server error:", err);

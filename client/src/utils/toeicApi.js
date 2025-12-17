@@ -194,3 +194,11 @@ export const getWritingAttemptReview = async (attemptId) => {
   if (!data.ok) throw new Error(data.msg);
   return data.data;
 };
+
+// ==================== PREDICTION ====================
+export const getMyLatestPrediction = async () => {
+  const res = await apiRequest.get("/prediction/my/latest");
+  const data = res.data;
+  if (!data.ok) throw new Error(data.msg || "Lỗi lấy dự đoán");
+  return data.data;
+};

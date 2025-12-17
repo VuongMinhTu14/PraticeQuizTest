@@ -1,4 +1,3 @@
-// client/src/layouts/practice/ToeicReviewPage.jsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getToeicAttemptReview } from "../../utils/toeicApi";
@@ -14,6 +13,21 @@ const PART_LABELS = {
   p6: "Part 6",
   p7: "Part 7",
 };
+
+const PART_WEIGHTS = {
+  // Listening 100 questions
+  p1: 6,
+  p2: 25,
+  p3: 39,
+  p4: 30,
+  // Reading 100 questions
+  p5: 30,
+  p6: 16,
+  p7: 54,
+};
+
+const LISTENING_PARTS = ["p1", "p2", "p3", "p4"];
+const READING_PARTS = ["p5", "p6", "p7"];
 
 const ToeicReviewPage = () => {
   const { attemptId } = useParams();
@@ -54,19 +68,15 @@ const ToeicReviewPage = () => {
   const skippedCount = Math.max(totalQuestions - answeredCount, 0);
   const percent =
     attempt.scorePercent ??
-    (totalQuestions > 0
-      ? Math.round((totalCorrect / totalQuestions) * 100)
-      : 0);
+    (totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0);
 
-  // thời gian làm bài (nếu có createdAt / submittedAt)
+  const displayScore = `${totalCorrect}/${totalQuestions}`;
+
   let timeSpentText = "-";
   if (attempt.createdAt && attempt.submittedAt) {
     const start = new Date(attempt.createdAt);
     const end = new Date(attempt.submittedAt);
-    const diffSec = Math.max(
-      0,
-      Math.round((end.getTime() - start.getTime()) / 1000)
-    );
+    const diffSec = Math.max(0, Math.round((end.getTime() - start.getTime()) / 1000));
     const h = Math.floor(diffSec / 3600)
       .toString()
       .padStart(2, "0");
@@ -78,10 +88,47 @@ const ToeicReviewPage = () => {
   }
 
   const scoreByPart = attempt.scoreByPart || [];
+  const listeningParts = scoreByPart.filter((p) => LISTENING_PARTS.includes(p.partKey));
+  const readingParts = scoreByPart.filter((p) => READING_PARTS.includes(p.partKey));
+
+  const sumCorrect = (arr) => arr.reduce((s, p) => s + (p.correct || 0), 0);
+  const sumTotal = (arr) => arr.reduce((s, p) => s + (p.total || 0), 0);
+
+  const totalListeningCorrect = sumCorrect(listeningParts);
+  const totalListeningQuestions = sumTotal(listeningParts);
+  const totalReadingCorrect = sumCorrect(readingParts);
+  const totalReadingQuestions = sumTotal(readingParts);
+
+  const estimatedListening =
+    totalListeningQuestions > 0
+      ? Math.round((totalListeningCorrect / totalListeningQuestions) * 495)
+      : null;
+  const estimatedReading =
+    totalReadingQuestions > 0
+      ? Math.round((totalReadingCorrect / totalReadingQuestions) * 495)
+      : null;
+  const estimatedTotal =
+    estimatedListening != null && estimatedReading != null
+      ? estimatedListening + estimatedReading
+      : null;
+
+  const sectionWeight = {
+    listening: LISTENING_PARTS.reduce((s, k) => s + PART_WEIGHTS[k], 0),
+    reading: READING_PARTS.reduce((s, k) => s + PART_WEIGHTS[k], 0),
+  };
+
+  const scoreByPartWithEst = scoreByPart.map((p) => {
+    const isListening = LISTENING_PARTS.includes(p.partKey);
+    const base = isListening ? sectionWeight.listening : sectionWeight.reading;
+    const weight = PART_WEIGHTS[p.partKey] || 0;
+    const partMax = (495 * weight) / base;
+    const estimated =
+      p.total > 0 && weight > 0 ? Math.round((p.correct / p.total) * partMax) : null;
+    return { ...p, estimatedScore: estimated };
+  });
 
   return (
     <div className="review-page">
-      {/* HEADER */}
       <div className="review-header">
         <div>
           <h2>Xem lại bài làm TOEIC</h2>
@@ -89,87 +136,103 @@ const ToeicReviewPage = () => {
             Đề: <b>{attempt.setId}</b>
           </div>
         </div>
-        <Button onClick={() => navigate(-1)}>⬅ Quay lại</Button>
+        <Button onClick={() => navigate(-1)}>← Quay lại</Button>
       </div>
 
-      {/* SUMMARY GIỐNG STUDY4 */}
       <div className="review-summary-grid">
-        {/* card lớn bên trái */}
         <div className="rv-summary-card rv-summary-card-main">
           <div className="rv-main-row">
-            <div className="rv-main-label">Kết quả làm bài</div>
-            <div className="rv-main-value">
-              {totalCorrect}/{totalQuestions}
-            </div>
+            <div className="rv-main-label">Kết quả bài làm</div>
+            <div className="rv-main-value">{displayScore}</div>
           </div>
           <div className="rv-main-sub">
-            Độ chính xác:{" "}
-            <b>
-              {percent}
-              %
-            </b>{" "}
-            (đúng / tổng)
+            Tỉ lệ: <b>{percent}%</b> (đúng/tổng)
           </div>
           <div className="rv-main-sub">
             Thời gian hoàn thành: <b>{timeSpentText}</b>
           </div>
+          <div className="rv-main-sub">
+            Ước tính điểm Listening / Reading:{" "}
+            <b>
+              {estimatedListening != null ? `${estimatedListening}/495` : "-"} •{" "}
+              {estimatedReading != null ? `${estimatedReading}/495` : "-"}
+            </b>
+            {estimatedTotal != null && (
+              <>
+                {" "}
+                (Tổng ~ <b>{estimatedTotal}/990</b>)
+              </>
+            )}
+          </div>
         </div>
 
-        {/* đúng */}
         <div className="rv-summary-card rv-ok">
           <div className="rv-label">Trả lời đúng</div>
           <div className="rv-value">{totalCorrect}</div>
           <div className="rv-unit">câu hỏi</div>
         </div>
 
-        {/* sai */}
         <div className="rv-summary-card rv-wrong">
           <div className="rv-label">Trả lời sai</div>
           <div className="rv-value">{wrongCount}</div>
           <div className="rv-unit">câu hỏi</div>
         </div>
 
-        {/* bỏ qua */}
         <div className="rv-summary-card rv-skip">
           <div className="rv-label">Bỏ qua</div>
           <div className="rv-value">{skippedCount}</div>
           <div className="rv-unit">câu hỏi</div>
         </div>
 
-        {/* điểm % */}
-        <div className="rv-summary-card rv-score">
-          <div className="rv-label">Điểm</div>
-          <div className="rv-value">{percent}</div>
-          <div className="rv-unit">%</div>
+        <div className="rv-summary-card rv-score-card">
+          <div className="rv-label">Listening</div>
+          <div className="rv-value rv-value-score">
+            {estimatedListening != null ? `${estimatedListening}/495` : "-/495"}
+          </div>
+        </div>
+
+        <div className="rv-summary-card rv-score-card">
+          <div className="rv-label">Reading</div>
+          <div className="rv-value rv-value-score">
+            {estimatedReading != null ? `${estimatedReading}/495` : "-/495"}
+          </div>
+        </div>
+
+        <div className="rv-summary-card rv-score-card rv-score-total">
+          <div className="rv-label">Tổng điểm</div>
+          <div className="rv-value rv-value-score">
+            {estimatedTotal != null ? `${estimatedTotal}/990` : "-/990"}
+          </div>
         </div>
       </div>
 
-      {/* BẢNG THEO PART */}
       <div className="rv-part-card">
         <h3>Chi tiết theo Part</h3>
         <table className="rv-part-table">
           <thead>
             <tr>
               <th>Part</th>
-              <th>Đúng / Tổng</th>
+              <th>Điểm (đúng/tổng)</th>
               <th>%</th>
+              <th>Ước điểm</th>
             </tr>
           </thead>
           <tbody>
-            {scoreByPart.length === 0 ? (
+            {scoreByPartWithEst.length === 0 ? (
               <tr>
-                <td colSpan={3} style={{ textAlign: "center", padding: 10 }}>
+                <td colSpan={4} className="rv-empty-row">
                   Chưa có dữ liệu theo Part.
                 </td>
               </tr>
             ) : (
-              scoreByPart.map((p) => (
+              scoreByPartWithEst.map((p) => (
                 <tr key={p.partKey}>
                   <td>{PART_LABELS[p.partKey] || p.partKey.toUpperCase()}</td>
                   <td>
                     {p.correct}/{p.total}
                   </td>
                   <td>{p.percent ?? 0}%</td>
+                  <td>{p.estimatedScore != null ? `${p.estimatedScore.toFixed(0)}` : "-"}</td>
                 </tr>
               ))
             )}
@@ -177,7 +240,6 @@ const ToeicReviewPage = () => {
         </table>
       </div>
 
-      {/* LIST CÂU HỎI */}
       <div className="review-list">
         {items.map((q) => {
           const user = q.userAnswer;
@@ -200,9 +262,7 @@ const ToeicReviewPage = () => {
                 </span>
               </div>
 
-              {q.questionText && (
-                <div className="rq-text">{q.questionText}</div>
-              )}
+              {q.questionText && <div className="rq-text">{q.questionText}</div>}
 
               <div className="rq-options">
                 <Radio.Group value={user} disabled>

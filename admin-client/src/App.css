@@ -4,3 +4,23 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Modal import: chống tràn nội dung dài */
+.ant-modal-body pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ant-modal-body .ant-input-textarea {
+  max-height: 320px;
+}
+
+.ant-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.import-modal .ant-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}

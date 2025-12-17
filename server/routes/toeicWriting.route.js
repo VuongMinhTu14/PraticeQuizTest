@@ -1,6 +1,6 @@
 // routes/toeicWriting.route.js
 import { Router } from "express";
-import { verifyToken } from "../middlewares/verifyToken.js";
+import { verifyToken, requireAdmin } from "../middlewares/verifyToken.js";
 
 import {
   // user side
@@ -43,17 +43,17 @@ router.get("/my/recent-attempts", verifyToken, getMyWritingRecentAttempts);
 router.get("/attempts/:id/review", verifyToken, getWritingAttemptReview);
 
 /* ---------- ADMIN – SETS ---------- */
-router.get("/admin/sets", /* verifyToken, */ adminListWritingSets);
-router.post("/admin/sets", /* verifyToken, */ adminCreateWritingSet);
-router.put("/admin/sets/:id", /* verifyToken, */ adminUpdateWritingSet);
-router.delete("/admin/sets/:id", /* verifyToken, */ adminDeleteWritingSet);
+router.get("/admin/sets", verifyToken, requireAdmin, adminListWritingSets);
+router.post("/admin/sets", verifyToken, requireAdmin, adminCreateWritingSet);
+router.put("/admin/sets/:id", verifyToken, requireAdmin, adminUpdateWritingSet);
+router.delete("/admin/sets/:id", verifyToken, requireAdmin, adminDeleteWritingSet);
 
 /* ---------- ADMIN – QUESTIONS ---------- */
-router.get("/admin/sets/:setId/questions",/* verifyToken, */ adminListWritingQuestions);
-router.post("/admin/sets/:setId/questions/import",/* verifyToken, */ adminImportWritingQuestions);
-router.post("/admin/sets/:setId/questions",/* verifyToken, */ adminCreateWritingQuestion);
-router.put("/admin/questions/:id",/* verifyToken, */ adminUpdateWritingQuestion);
-router.delete("/admin/questions/:id",/* verifyToken, */ adminDeleteWritingQuestion);
-router.post("/admin/questions/:id/upload-image",/* verifyToken, */ adminUploadWritingQuestionImage);
+router.get("/admin/sets/:setId/questions", verifyToken, requireAdmin, adminListWritingQuestions);
+router.post("/admin/sets/:setId/questions/import", verifyToken, requireAdmin, adminImportWritingQuestions);
+router.post("/admin/sets/:setId/questions", verifyToken, requireAdmin, adminCreateWritingQuestion);
+router.put("/admin/questions/:id", verifyToken, requireAdmin, adminUpdateWritingQuestion);
+router.delete("/admin/questions/:id", verifyToken, requireAdmin, adminDeleteWritingQuestion);
+router.post("/admin/questions/:id/upload-image", verifyToken, requireAdmin, adminUploadWritingQuestionImage);
 
 export default router;

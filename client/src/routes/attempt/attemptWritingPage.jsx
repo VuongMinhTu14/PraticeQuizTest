@@ -8,12 +8,13 @@ import {
   submitWritingAttempt,
   getWritingQuestionsOfSet,
 } from "../../utils/toeicApi";
+import { scoreWritingLocal } from "../../utils/localWritingApi";
 
 const { TextArea } = Input;
 
 const PART_LABELS = {
-  w1_5: "Questions 1–5",
-  w6_7: "Questions 6–7",
+  w1_5: "Questions 1-5",
+  w6_7: "Questions 6-7",
   w8: "Question 8",
 };
 
@@ -34,30 +35,32 @@ const AttemptWritingPage = () => {
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState(null);
   const [questions, setQuestions] = useState([]);
-  const [answers, setAnswers] = useState({}); // { questionId: text }
+  const [answers, setAnswers] = useState({});
 
   const [activeQuestionId, setActiveQuestionId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [localScoring, setLocalScoring] = useState({
+    loading: false,
+    result: null,
+    error: "",
+  });
 
   const [leftSec, setLeftSec] = useState(null);
 
-    useEffect(() => {
+  useEffect(() => {
     let alive = true;
 
     const load = async () => {
       try {
         setLoading(true);
 
-        // 1) Lấy meta attempt
         const at = await getWritingAttempt(attemptId);
         if (!alive) return;
         setMeta(at);
 
-        // 2) Lấy toàn bộ câu hỏi của đề
         const allQuestions = await getWritingQuestionsOfSet(at.setId);
         if (!alive) return;
 
-        // Nếu có selectedParts thì lọc theo, còn không thì lấy hết 8 câu
         let filtered = allQuestions;
         if (Array.isArray(at.selectedParts) && at.selectedParts.length) {
           const allow = new Set(at.selectedParts);
@@ -66,7 +69,6 @@ const AttemptWritingPage = () => {
 
         setQuestions(filtered);
 
-        // 3) Khởi tạo câu trả lời (nếu BE có lưu answers thì map lại, còn không bỏ qua)
         const initAnswers = {};
         if (Array.isArray(at.answers)) {
           at.answers.forEach((a) => {
@@ -77,12 +79,10 @@ const AttemptWritingPage = () => {
         }
         setAnswers(initAnswers);
 
-        // 4) Câu active đầu tiên
         if (filtered.length) {
           setActiveQuestionId(filtered[0].id);
         }
 
-        // 5) Thời gian
         if (at.timeLimitSec) setLeftSec(at.timeLimitSec);
         else setLeftSec(null);
       } catch (err) {
@@ -98,7 +98,6 @@ const AttemptWritingPage = () => {
       alive = false;
     };
   }, [attemptId, msgApi]);
-
 
   // timer
   useEffect(() => {
@@ -146,7 +145,6 @@ const AttemptWritingPage = () => {
     [questions, answers]
   );
 
-  // group theo phần (w1_5, w6_7, w8)
   const questionsByPart = useMemo(() => {
     const map = {};
     questions.forEach((q) => {
@@ -167,8 +165,7 @@ const AttemptWritingPage = () => {
       const confirm = await new Promise((resolve) => {
         Modal.confirm({
           title: "Nộp bài TOEIC Writing?",
-          content:
-            "Sau khi nộp, bạn sẽ không thể chỉnh sửa câu trả lời nữa.",
+          content: "Sau khi nộp, bạn sẽ không thể chỉnh sửa câu trả lời nữa.",
           okText: "Nộp bài",
           cancelText: "Hủy",
           onOk: () => resolve(true),
@@ -205,6 +202,36 @@ const AttemptWritingPage = () => {
     }
   };
 
+  const handleLocalScore = async () => {
+    if (!questions.length) return;
+    const combinedAnswer = questions
+      .map((q) => `Question ${q.number}: ${answers[q.id] || ""}`)
+      .join("\n\n");
+
+    if (!combinedAnswer.trim()) {
+      msgApi.warning("Hãy nhập câu trả lời trước khi chấm offline.");
+      return;
+    }
+
+    try {
+      setLocalScoring({ loading: true, result: null, error: "" });
+      const res = await scoreWritingLocal({
+        answerText: combinedAnswer,
+        questionText: questions.map((q) => q.prompt).join("\n"),
+      });
+      setLocalScoring({ loading: false, result: res, error: "" });
+    } catch (err) {
+      console.error("local score error:", err);
+      setLocalScoring({
+        loading: false,
+        result: null,
+        error:
+          err?.response?.data?.msg ||
+          "Không chấm được bằng mô hình offline. Kiểm tra service local.",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="attempt-page">
@@ -234,6 +261,37 @@ const AttemptWritingPage = () => {
     <div className="attempt-page">
       {contextHolder}
 
+      {localScoring.error && (
+        <div className="attempt-alert error">{localScoring.error}</div>
+      )}
+      {localScoring.result && (
+        <div className="attempt-alert success">
+          <div>
+            <b>Chấm offline (Llama 8B):</b> Overall{" "}
+            {localScoring.result.overall ?? "-"}
+          </div>
+          {localScoring.result.criteria && (
+            <div className="criteria-row">
+              {Object.entries(localScoring.result.criteria).map(([k, v]) => (
+                <span key={k}>
+                  {k}: <b>{v}</b>
+                </span>
+              ))}
+            </div>
+          )}
+          {Array.isArray(localScoring.result.suggestions) && (
+            <ul className="suggestion-list">
+              {localScoring.result.suggestions.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ul>
+          )}
+          {localScoring.result.summary && (
+            <div>{localScoring.result.summary}</div>
+          )}
+        </div>
+      )}
+
       <button
         type="button"
         className="btn-back"
@@ -242,7 +300,6 @@ const AttemptWritingPage = () => {
         ← Quay lại
       </button>
 
-      {/* HEADER */}
       <div className="attempt-header">
         <div>
           <h1 className="attempt-title">Bài luyện TOEIC Writing</h1>
@@ -265,9 +322,7 @@ const AttemptWritingPage = () => {
         </div>
       </div>
 
-      {/* BODY LAYOUT */}
       <div className="attempt-layout">
-        {/* MAIN LEFT */}
         <div className="attempt-main">
           {activeQuestion && (
             <div className="attempt-question">
@@ -288,7 +343,6 @@ const AttemptWritingPage = () => {
                   alignItems: "flex-start",
                 }}
               >
-                {/* left: prompt + image */}
                 <div>
                   {activeQuestion.imageUrl && (
                     <div className="q-media">
@@ -318,7 +372,6 @@ const AttemptWritingPage = () => {
                   </div>
                 </div>
 
-                {/* right: textarea */}
                 <div>
                   <div
                     style={{
@@ -333,7 +386,7 @@ const AttemptWritingPage = () => {
                         {" "}
                         (khoảng{" "}
                         {activeQuestion.minWords
-                          ? `${activeQuestion.minWords}–`
+                          ? `${activeQuestion.minWords}-`
                           : ""}
                         {activeQuestion.maxWords || ""} từ)
                       </>
@@ -383,7 +436,6 @@ const AttemptWritingPage = () => {
           </div>
         </div>
 
-        {/* SIDEBAR */}
         <aside className="attempt-sidebar">
           <div className="attempt-sidebar-card">
             <div className="sidebar-section">
@@ -418,10 +470,23 @@ const AttemptWritingPage = () => {
               </Button>
             </div>
 
-            <div className="sidebar-questions">
-              <div className="sidebar-questions-title">
-                Questions 1–8
+            <div className="sidebar-section">
+              <div className="sidebar-title">Chấm offline (Llama 8B)</div>
+              <Button
+                onClick={handleLocalScore}
+                loading={localScoring.loading}
+                block
+              >
+                {localScoring.loading ? "Đang chấm..." : "Chấm offline"}
+              </Button>
+              <div className="sidebar-sub">
+                Dùng mô hình local qua Ollama (Llama 3.2 8B). Cần service local
+                chạy ở `VITE_LOCAL_WRITING_URL`.
               </div>
+            </div>
+
+            <div className="sidebar-questions">
+              <div className="sidebar-questions-title">Questions 1-8</div>
               <div className="sidebar-questions-grid">
                 {questions.map((q) => {
                   const isAnswered =
@@ -445,8 +510,8 @@ const AttemptWritingPage = () => {
             </div>
 
             <div className="sidebar-note">
-              Nhấn vào số câu để chuyển nhanh giữa các câu Writing. Hãy
-              kiểm tra lại một lần nữa trước khi bấm <b>Nộp bài</b>.
+              Nhấn vào số câu để chuyển nhanh giữa các câu Writing. Hãy kiểm tra
+              lại trước khi bấm <b>Nộp bài</b>.
             </div>
           </div>
         </aside>

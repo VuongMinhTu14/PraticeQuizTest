@@ -1,0 +1,115 @@
+.coach-page {
+  padding: 16px 12px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
+}
+
+.coach-hero {
+  background: #0f172a;
+  color: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 16px 40px rgba(79, 70, 229, 0.32);
+}
+.coach-hero h1 {
+  margin: 6px 0;
+}
+.hero-sub {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+}
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-actions .ant-btn {
+  border-radius: 12px;
+  font-weight: 700;
+}
+.hero-actions .ant-btn-ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.section-head h3 {
+  margin: 0;
+}
+.section-head .sub {
+  color: #475569;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+.quick-card {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.quick-title {
+  font-weight: 700;
+}
+.quick-desc {
+  color: #475569;
+  font-size: 13px;
+}
+.quick-card .ant-btn {
+  align-self: flex-start;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+.empty {
+  padding: 12px;
+  background: #fff;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  color: #475569;
+}
+
+body[data-theme="dark"] .section-head .sub {
+  color: #cbd5e1;
+}
+body[data-theme="dark"] .quick-card,
+body[data-theme="dark"] .empty {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+body[data-theme="dark"] .quick-desc {
+  color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+  .hero-actions {
+    width: 100%;
+  }
+}

@@ -19,6 +19,8 @@ const PracticeWritingDetail = React.lazy(() => import("./routes/practice/practic
 const ToeicResultPage = React.lazy(() => import("./routes/practice/ToeicResultPage"));
 const ToeicReviewPage = React.lazy(() => import("./routes/practice/ToeicReviewPage"));
 const ToeicWritingReviewPage = React.lazy(() => import("./routes/practice/ToeicWritingReviewPage"));
+const PracticePrediction = React.lazy(() => import("./routes/practice/prediction"));
+const PracticeCoach = React.lazy(() => import("./routes/practice/practiceCoach"));
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
@@ -31,9 +33,11 @@ createRoot(document.getElementById("root")).render(
               <Route path='/' element={<Dashboard />} />
                <Route path="/profile/:username" element={<ProfilePage />} />
               <Route path='/practice' element={<Practice />} />
+              <Route path="/practice/coach" element={<PracticeCoach />} />
               <Route path="/practice/:id" element={<PracticeDetail />} />
               <Route path='/practice/writing' element={<PracticeWriting />} />
               <Route path='/practice/writing/:id' element={<PracticeWritingDetail />} />
+              <Route path="/practice/prediction" element={<PracticePrediction />} />
               <Route path="/attempt-writing/:attemptId" element={<AttemptWritingPage />}/>
               <Route path="/attempt-writing/:attemptId/review" element={<ToeicWritingReviewPage />}/>
               <Route path="/attempt/:attemptId/result" element={<ToeicResultPage />} />

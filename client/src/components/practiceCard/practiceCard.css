@@ -1,94 +1,116 @@
 .practice-card {
   position: relative;
-  border: 1px solid rgba(0,0,0,.06);
-  background: rgba(255,255,255,.6);
-  backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
   border-radius: 18px;
-  padding: 16px 14px 12px;
-  transition: transform .25s ease, box-shadow .25s ease;
+  padding: 18px 16px 14px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .practice-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
 }
 body[data-theme="dark"] .practice-card {
-  background: rgba(14,20,33,.75);
-  border-color: rgba(255,255,255,.06);
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* premium sticker góc phải */
-.practice-card .sticker {
+.bookmark-btn {
   position: absolute;
   top: 10px;
   right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  color: #d1d5db;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg,#facc15,#eab308);
-  color: #111;
-  font-weight: 700;
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
-body[data-theme="dark"] .practice-card .sticker {
-  background: linear-gradient(135deg,#fde047,#ca8a04);
-  color: #000;
+.bookmark-btn:hover {
+  transform: scale(1.04);
 }
-.sticker-icon { font-size: 12px; line-height: 1; }
+.bookmark-btn.active {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+body[data-theme="dark"] .bookmark-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
 
 /* nội dung */
 .practice-card .title {
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 6px;
-  line-height: 1.3;
+  font-weight: 800;
+  font-size: 17px;
+  margin: 0;
+  line-height: 1.35;
 }
 .practice-card .meta {
   font-size: 13px;
-  opacity: .85;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin: 2px 0 6px;
 }
-.meta-chip { display: inline-flex; align-items: center; gap: 4px; }
-.dot { opacity: .5; }
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99, 102, 241, 0.08);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #111827;
+}
+body[data-theme="dark"] .practice-card .meta-chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+.dot {
+  opacity: 0.55;
+  font-weight: 700;
+}
 
 .practice-card .tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 12px;
+  margin: 2px 0 10px;
 }
 .tag {
-  background: rgba(0,0,0,.05);
+  background: rgba(0, 0, 0, 0.04);
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 999px;
+  color: #475569;
 }
-body[data-theme="dark"] .tag { background: rgba(255,255,255,.08); }
+body[data-theme="dark"] .tag {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
 
 .practice-card .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 13px;
-  opacity: .9;
+  gap: 8px;
 }
-.btn-detail {
-  text-decoration: none;
-  background: #111827;
-  color: #fff;
+.practice-card .footer .ant-btn {
   font-weight: 700;
-  padding: 7px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  transition: .18s;
+  border-radius: 12px;
 }
-.btn-detail:hover { opacity: .92; }
 
 /* ==== Writing card style ==== */
 .practice-card.writing-card {
@@ -108,7 +130,7 @@ body[data-theme="dark"] .tag { background: rgba(255,255,255,.08); }
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
 }
 
-/* header nhỏ phía trên */
+/* header nửa phần trên */
 .pcw-header {
   display: flex;
   justify-content: space-between;
@@ -149,15 +171,14 @@ body[data-theme="dark"] .tag { background: rgba(255,255,255,.08); }
   font-size: 13px;
   color: #6b7280;
 }
-
-/* reuse meta-chip, dot nếu file cũ đã có thì khỏi thêm */
-.meta-chip {
+.pcw-meta .meta-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  background: transparent;
+  padding: 0;
 }
-
-.dot {
+.pcw-meta .dot {
   margin: 0 4px;
   color: #d1d5db;
 }
@@ -210,8 +231,3 @@ body[data-theme="dark"] .tag { background: rgba(255,255,255,.08); }
   background: #000;
   transform: translateY(-1px);
 }
-
-
-/* gợi ý loại card */
-.practice-card.premium { border-top: 3px solid #facc15; }
-.practice-card.free    { border-top: 3px solid #4ade80; }

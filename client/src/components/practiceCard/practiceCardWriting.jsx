@@ -1,6 +1,7 @@
 // src/components/practiceCard/practiceCardWriting.jsx
 import "./practiceCard.css";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Button } from "antd";
 import {
   ClockCircleOutlined,
   AppstoreOutlined,
@@ -12,6 +13,7 @@ import {
 
 const PracticeCardWriting = ({ item }) => {
   const minutes = Math.round((item?.durationSec ?? 0) / 60) || 0;
+  const navigate = useNavigate();
 
   return (
     <div className="practice-card writing-card">
@@ -64,9 +66,13 @@ const PracticeCardWriting = ({ item }) => {
           </span>
         </div>
 
-        <Link to={`/practice/writing/${item?.id}`} className="pcw-button">
+        <Button
+          type="primary"
+          size="middle"
+          onClick={() => navigate(`/practice/writing/${item?.id}`)}
+        >
           Chi tiết
-        </Link>
+        </Button>
       </div>
     </div>
   );

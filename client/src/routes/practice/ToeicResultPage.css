@@ -19,6 +19,10 @@
   color: #6b7280;
 }
 
+.result-percent-tag {
+  margin-left: 8px;
+}
+
 .result-actions {
   display: flex;
   gap: 8px;

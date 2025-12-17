@@ -52,6 +52,34 @@
   padding-inline: 24px;
 }
 
+.admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-user-label {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.admin-logout-btn {
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.admin-logout-btn:hover {
+  background: #1f2937;
+  transform: translateY(-1px);
+}
+
 .admin-content {
   padding: 20px 24px;
   background: #f3f4f6;

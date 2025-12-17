@@ -54,15 +54,26 @@ export const logoutAdmin = () => {
 };
 
 // ===== USERS =====
-export const getUsers = async () => {
-  const res = await api.get("/admin/users");
+export const getUsers = async (params = {}) => {
+  const res = await api.get("/admin/users", { params });
   if (!res.data.ok) throw new Error(res.data.msg || "Load users fail");
-  return res.data.data;
+  return {
+    items: res.data.data || [],
+    total: res.data.total || 0,
+    page: res.data.page || 1,
+    pageSize: res.data.pageSize || params.limit || 10,
+  };
 };
 
 export const resetUserPoints = async (userId) => {
   const res = await api.post(`/admin/users/${userId}/reset-points`);
   if (!res.data.ok) throw new Error(res.data.msg || "Reset fail");
+  return res.data;
+};
+
+export const updateUserAdmin = async (userId, payload) => {
+  const res = await api.patch(`/admin/users/${userId}`, payload);
+  if (!res.data.ok) throw new Error(res.data.msg || "Update user fail");
   return res.data;
 };
 
@@ -233,4 +244,11 @@ export const uploadToeicQuestionAudioAdmin = async (questionId, file) => {
     formData
   );
   return res.data;
+};
+
+// ===== DASHBOARD / STATS =====
+export const fetchAdminOverview = async (days = 30) => {
+  const res = await api.get("/admin/stats/overview", { params: { days } });
+  if (!res.data.ok) throw new Error(res.data.msg || "Load stats fail");
+  return res.data.data;
 };

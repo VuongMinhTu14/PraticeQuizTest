@@ -9,6 +9,7 @@ import ToeicQuestionsAdmin from "./pages/toeicQuestionsAdmin/ToeicQuestionsAdmin
 import ToeicWritingAdmin from "./pages/toeicWritingAdmin/toeicWritingAdmin";
 import ToeicSetWritingAdmin from "./pages/toeicSetWritingAdmin/ToeicSetWritingAdmin";
 import ToeicWritingQuestionsAdmin from "./pages/toeicWritingQuestionsAdmin/ToeicWritingQuestionsAdmin";
+import Dashboard from "./pages/dashboard/Dashboard";
 import "./App.css";
 import { getMe } from "./api/adminApi.js";
 
@@ -56,7 +57,8 @@ function App() {
             <RequireAuth>
               <AdminLayout>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/users" replace />} />
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/users" element={<UsersAdmin />} />
                   <Route path="/toeic-sets" element={<ToeicSetAdmin />} />
                   <Route path="/toeic-questions" element={<ToeicQuestionsAdmin />} />
