@@ -1,0 +1,479 @@
+/* ================== PAGE & HEADER ================== */
+
+.attempt-page {
+  padding: 32px 40px;
+  background: #f3f4f6;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.attempt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.attempt-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.attempt-meta {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.attempt-meta b {
+  color: #111827;
+}
+
+.attempt-alert {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.attempt-alert.success {
+  background: #ecfdf3;
+  border-color: #22c55e33;
+  color: #166534;
+}
+
+.attempt-alert.error {
+  background: #fef2f2;
+  border-color: #ef444433;
+  color: #991b1b;
+}
+
+.criteria-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.criteria-row span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(17, 24, 39, 0.04);
+  color: #111827;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.suggestion-list {
+  margin: 8px 0 4px 20px;
+  padding: 0;
+  color: #0f172a;
+  list-style: disc;
+}
+
+.attempt-timer {
+  text-align: right;
+}
+
+.attempt-timer-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.timer-box {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  min-width: 80px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ================== MAIN LAYOUT ================== */
+
+.attempt-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.attempt-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.attempt-sidebar {
+  width: 240px;          /* nhỏ hơn một chút để nhường chỗ cho 2 panel */
+  flex-shrink: 0;
+}
+
+/* ================== SIDEBAR ================== */
+
+.attempt-sidebar-card {
+  position: sticky;
+  top: 80px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-section {
+  margin-bottom: 4px;
+}
+
+.sidebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.sidebar-timer {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.sidebar-sub {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.sidebar-submit-btn {
+  margin-top: 4px;
+}
+
+.sidebar-note {
+  font-size: 12px;
+  color: #6b7280;
+  border-radius: 8px;
+  background: #f9fafb;
+  padding: 8px 10px;
+}
+
+/* lưới số câu hỏi */
+
+.sidebar-questions-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 6px 0;
+}
+
+.sidebar-questions-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* ít cột hơn cho ô rộng hơn */
+  gap: 6px;
+}
+
+.sidebar-q-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+  font-size: 12px;
+  height: 28px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sidebar-q-item:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.sidebar-q-item.answered {
+  background: #22c55e1a;
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+/* ================== DANH SÁCH CÂU HỎI ================== */
+
+.attempt-question-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.attempt-question {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.attempt-question:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.q-header {
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.q-text {
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+/* media (ảnh + audio) */
+
+.q-media {
+  margin: 12px 0;
+  text-align: center;
+}
+
+.q-image {
+  display: block;
+  max-width: 640px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.q-audio {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* OPTIONS (antd Radio) */
+
+.q-options .ant-radio-wrapper {
+  display: block;
+  margin: 2px 0;
+}
+
+.option-text-hidden {
+  display: none;
+}
+
+.option-text {
+  display: inline;
+}
+
+/* ================== NÚT NỘP & NÚT BACK ================== */
+
+.attempt-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.attempt-actions--bottom-mobile {
+  display: none;
+}
+
+.btn-back {
+  margin-bottom: 14px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-back:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ================== PHẦN ĐỌC (P6, P7) – 2 PANEL ================== */
+
+/* 👉 Quan trọng: tăng tỉ lệ cột bên trái để hình bự hơn, câu hỏi hẹp lại */
+.attempt-reading-main {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.1fr); /* trái to, phải nhỏ */
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.reading-passages-panel {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.reading-questions-panel {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+/* card chứa từng passage */
+
+.reading-passage-card {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(248, 250, 252, 0.98);
+  margin-bottom: 10px;
+}
+
+.passage-header .badge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #1d4ed8;
+  margin-bottom: 6px;
+}
+
+/* ảnh đoạn văn thật sự */
+
+.passage-image-wrap {
+  margin-bottom: 8px;
+}
+
+.passage-image {
+  width: 100%;
+  max-width: 760px;       /* cho ảnh to gần giống study4 */
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f9fafb;
+}
+
+/* nút "Xem đoạn văn" nhỏ bên cạnh câu */
+
+.btn-link-small {
+  margin-left: 8px;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-link-small:hover {
+  text-decoration: underline;
+}
+
+/* ================== TABS PART 1..7 ================== */
+
+.attempt-part-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.part-tab-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #f9fafb;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.part-tab-btn--active {
+  background: #e0ebff;
+  border-color: #2563eb;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* ================== SCROLL TO TOP ================== */
+
+.scroll-top-btn {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.45);
+  opacity: 0.9;
+  transition: opacity 0.18s ease, transform 0.12s ease,
+    box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.scroll-top-btn:hover {
+  background: #020617;
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.6);
+}
+
+/* ================== RESPONSIVE ================== */
+
+@media (max-width: 992px) {
+  .attempt-layout {
+    flex-direction: column;
+  }
+
+  .attempt-sidebar {
+    width: 100%;
+  }
+
+  .attempt-sidebar-card {
+    position: static;
+  }
+
+  .sidebar-submit-btn {
+    display: none;          /* mobile dùng nút dưới */
+  }
+
+  .attempt-actions--bottom-mobile {
+    display: flex;
+  }
+
+  .attempt-reading-main {
+    grid-template-columns: 1fr; /* xếp chồng trên mobile */
+  }
+
+  .reading-passages-panel,
+  .reading-questions-panel {
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .attempt-page {
+    padding: 20px 16px;
+  }
+
+  .attempt-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .attempt-timer {
+    text-align: left;
+  }
+}

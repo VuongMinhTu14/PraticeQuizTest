@@ -1,0 +1,233 @@
+.practice-card {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 16px 14px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.practice-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+body[data-theme="dark"] .practice-card {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.bookmark-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+  color: #d1d5db;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.bookmark-btn:hover {
+  transform: scale(1.04);
+}
+.bookmark-btn.active {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+body[data-theme="dark"] .bookmark-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* nội dung */
+.practice-card .title {
+  font-weight: 800;
+  font-size: 17px;
+  margin: 0;
+  line-height: 1.35;
+}
+.practice-card .meta {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 6px;
+}
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99, 102, 241, 0.08);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #111827;
+}
+body[data-theme="dark"] .practice-card .meta-chip {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+.dot {
+  opacity: 0.55;
+  font-weight: 700;
+}
+
+.practice-card .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 10px;
+}
+.tag {
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #475569;
+}
+body[data-theme="dark"] .tag {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.practice-card .footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  gap: 8px;
+}
+.practice-card .footer .ant-btn {
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+/* ==== Writing card style ==== */
+.practice-card.writing-card {
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 18px 20px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.practice-card.writing-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+}
+
+/* header nửa phần trên */
+.pcw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.pcw-label {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.pcw-level {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* title */
+.pcw-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* meta row */
+.pcw-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+.pcw-meta .meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  padding: 0;
+}
+.pcw-meta .dot {
+  margin: 0 4px;
+  color: #d1d5db;
+}
+
+/* tags */
+.pcw-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.pcw-tag {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* footer */
+.pcw-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pcw-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* button Chi tiết */
+.pcw-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.pcw-button:hover {
+  background: #000;
+  transform: translateY(-1px);
+}

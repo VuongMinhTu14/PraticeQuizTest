@@ -4,9 +4,9 @@ import { Layout, Menu, Typography, Button, Tooltip } from "antd";
 import {
   HomeOutlined,
   ReadOutlined,
-  RocketOutlined,
   DoubleLeftOutlined,
   DoubleRightOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import useThemeStore from "../../store/themeStore";
 import "./leftBar.css";
@@ -20,14 +20,15 @@ const LeftBar = () => {
   const location = useLocation();
   const { mode, setMode } = useThemeStore();
 
-  // ✅ Đồng bộ theme lên body để topbar & toàn site đổi glass đúng màu
   useEffect(() => {
     document.body.dataset.theme = mode;
   }, [mode]);
 
   const selectedKey = useMemo(() => {
-    if (location.pathname.startsWith("/practice")) return "practice";
-    if (location.pathname.startsWith("/game")) return "game";
+    if (location.pathname.startsWith("/practice/prediction")) return "practice-prediction";
+    if (location.pathname.startsWith("/practice/writing")) return "practice-writing";
+    if (location.pathname.startsWith("/practice/coach")) return "coach";
+    if (location.pathname.startsWith("/practice")) return "practice-mcq";
     return "dashboard";
   }, [location.pathname]);
 
@@ -35,12 +36,18 @@ const LeftBar = () => {
     if (key === "dashboard") {
       setMode("light");
       nav("/");
-    } else if (key === "practice") {
+    } else if (key === "practice-mcq") {
       setMode("light");
       nav("/practice");
-    } else if (key === "game") {
-      setMode("dark");
-      nav("/game");
+    } else if (key === "coach") {
+      setMode("light");
+      nav("/practice/coach");
+    } else if (key === "practice-writing") {
+      setMode("light");
+      nav("/practice/writing");
+    } else if (key === "practice-prediction") {
+      setMode("light");
+      nav("/practice/prediction");
     }
   };
 
@@ -59,7 +66,6 @@ const LeftBar = () => {
         top: 0,
       }}
     >
-      {/* Logo / Brand */}
       <div className="leftbar-brand">
         <Tooltip title="PracticeQuiz" open={collapsed ? undefined : false} placement="right">
           <Text strong className={`leftbar-logo ${mode}`}>
@@ -68,7 +74,6 @@ const LeftBar = () => {
         </Tooltip>
       </div>
 
-      {/* Menu */}
       <Menu
         mode="inline"
         selectedKeys={[selectedKey]}
@@ -76,12 +81,20 @@ const LeftBar = () => {
         className="leftbar-menu"
         items={[
           { key: "dashboard", icon: <HomeOutlined />, label: "Dashboard" },
-          { key: "practice", icon: <ReadOutlined />, label: "Practice" },
-          { key: "game", icon: <RocketOutlined />, label: "Game" },
+          { key: "coach", icon: <ThunderboltOutlined />, label: "Coach & Luyện nhanh" },
+          {
+            key: "practice-group",
+            icon: <ReadOutlined />,
+            label: "Practice",
+            children: [
+              { key: "practice-mcq", label: "Trắc nghiệm TOEIC" },
+              { key: "practice-writing", label: "Practice Writing" },
+              { key: "practice-prediction", label: "Dự đoán điểm" },
+            ],
+          },
         ]}
       />
 
-      {/* Trigger thu/phóng */}
       <div className="leftbar-trigger">
         <Button
           type="primary"

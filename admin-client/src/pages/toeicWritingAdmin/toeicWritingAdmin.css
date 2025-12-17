@@ -1,0 +1,45 @@
+.writing-admin-page {
+  padding: 32px;
+}
+
+.writing-admin-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.writing-admin-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+.writing-admin-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* khối chứa table cho giống trang khác */
+.writing-admin-table-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* group min/max words */
+.word-limit-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.word-limit-input {
+  flex: 1;
+}
+
+/* radio group trong modal import */
+.writing-import-type {
+  margin-bottom: 12px;
+}

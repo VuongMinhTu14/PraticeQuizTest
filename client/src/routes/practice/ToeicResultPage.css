@@ -1,0 +1,36 @@
+
+.result-page {
+  padding: 24px 32px;
+  background: #f3f4f6;
+  min-height: 100vh;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.result-meta {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.result-percent-tag {
+  margin-left: 8px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.result-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}

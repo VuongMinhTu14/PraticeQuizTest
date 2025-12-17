@@ -1,1 +1,13 @@
 .layout-root{position:relative}.page-outlet{padding:16px}
+.page-outlet {
+  padding: 24px;
+  border-radius: 0;
+  background: inherit !important;  
+}
+body[data-theme="dark"] .page-outlet {
+  background: inherit !important;
+}
+.content {
+  background: inherit !important;
+  min-height: 100vh; 
+}
