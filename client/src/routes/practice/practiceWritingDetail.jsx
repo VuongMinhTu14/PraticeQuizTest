@@ -1,4 +1,3 @@
-// src/routes/practice/practiceWritingDetail.jsx
 import "./practiceDetail.css";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -6,8 +5,9 @@ import {
   ClockCircleOutlined,
   FileTextOutlined,
   CheckSquareOutlined,
+  LeftOutlined,
 } from "@ant-design/icons";
-import { message } from "antd";
+import { Button, message } from "antd";
 import {
   getWritingSet,
   getWritingLastAttempt,
@@ -15,27 +15,26 @@ import {
 } from "../../utils/toeicApi";
 
 const WRITING_PARTS = [
-  { key: "w1_5", name: "Questions 1–5 (Picture)" },
-  { key: "w6_7", name: "Questions 6–7 (Email)" },
+  { key: "w1_5", name: "Questions 1-5 (Picture)" },
+  { key: "w6_7", name: "Questions 6-7 (Email)" },
   { key: "w8", name: "Question 8 (Essay)" },
 ];
 
 const PracticeWritingDetail = () => {
-  const { id } = useParams(); // writing setId
+  const { id } = useParams();
   const navigate = useNavigate();
   const [msgApi, contextHolder] = message.useMessage();
 
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [activeTab, setActiveTab] = useState("practice"); // practice | full
+  const [activeTab, setActiveTab] = useState("practice");
   const [selectedParts, setSelectedParts] = useState([]);
   const [limit, setLimit] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const [lastAttempt, setLastAttempt] = useState(null);
 
-  // ===== LOAD SET =====
   useEffect(() => {
     if (!id) return;
     let alive = true;
@@ -60,7 +59,6 @@ const PracticeWritingDetail = () => {
     };
   }, [id, msgApi]);
 
-  // ===== LAST ATTEMPT =====
   useEffect(() => {
     if (!id) return;
     let alive = true;
@@ -85,11 +83,10 @@ const PracticeWritingDetail = () => {
     );
   };
 
-  // ===== START PRACTICE (by part) =====
   const handleStartPractice = async () => {
     if (!test) return;
     if (selectedParts.length === 0) {
-      msgApi.warning("Chọn ít nhất 1 phần để luyện nha!");
+      msgApi.warning("Chọn ít nhất 1 phần để luyện.");
       return;
     }
 
@@ -100,7 +97,7 @@ const PracticeWritingDetail = () => {
         timeLimitSec: limit ? Number(limit) * 60 : null,
       };
 
-      const res = await createWritingAttempt(test.id, payload); // { ok, attemptId }
+      const res = await createWritingAttempt(test.id, payload);
       if (!res.ok) {
         msgApi.error(res.msg || "Không tạo được bài Writing");
         return;
@@ -123,7 +120,6 @@ const PracticeWritingDetail = () => {
     }
   };
 
-  // ===== START FULL TEST =====
   const handleStartFull = async () => {
     if (!test) return;
 
@@ -159,7 +155,6 @@ const PracticeWritingDetail = () => {
     }
   };
 
-  // ===== RENDER =====
   if (!id) {
     return (
       <div className="detail-page">
@@ -193,20 +188,18 @@ const PracticeWritingDetail = () => {
     <div className="detail-page">
       {contextHolder}
 
-      <button
-        type="button"
+      <Button
+        type="default"
         className="btn-back"
+        icon={<LeftOutlined />}
         onClick={() => navigate(-1)}
       >
-        ← Quay lại
-      </button>
+        Quay lại
+      </Button>
 
-      {/* Kết quả lần gần nhất (nếu có) */}
       {lastAttempt && (
         <div className="result-latest-box">
-          <div className="result-latest-title">
-            Kết quả TOEIC Writing gần nhất
-          </div>
+          <div className="result-latest-title">Kết quả TOEIC Writing gần nhất</div>
           <div className="result-summary">
             Điểm dự đoán TOEIC Writing:{" "}
             <b>{lastAttempt.summary?.predictedToeicScore ?? "?"}</b>/200
@@ -215,26 +208,25 @@ const PracticeWritingDetail = () => {
             <tbody>
               <tr>
                 <td>Task achievement</td>
-                <td>{lastAttempt.summary?.taskScore ?? "-"}/5</td>
+                <td>{lastAttempt.summary?.taskScore ?? "-"} /5</td>
               </tr>
               <tr>
                 <td>Grammar</td>
-                <td>{lastAttempt.summary?.grammarScore ?? "-"}/5</td>
+                <td>{lastAttempt.summary?.grammarScore ?? "-"} /5</td>
               </tr>
               <tr>
                 <td>Vocabulary</td>
-                <td>{lastAttempt.summary?.vocabularyScore ?? "-"}/5</td>
+                <td>{lastAttempt.summary?.vocabularyScore ?? "-"} /5</td>
               </tr>
               <tr>
                 <td>Organization</td>
-                <td>{lastAttempt.summary?.organizationScore ?? "-"}/5</td>
+                <td>{lastAttempt.summary?.organizationScore ?? "-"} /5</td>
               </tr>
             </tbody>
           </table>
         </div>
       )}
 
-      {/* HEADER */}
       <div className="detail-header">
         <div className="chip">#TOEIC Writing</div>
         <h1 className="title">{test.title}</h1>
@@ -243,43 +235,44 @@ const PracticeWritingDetail = () => {
           <span>
             <ClockCircleOutlined /> Thời gian làm bài: {minutes} phút
           </span>
-          <span>•</span>
+          <span className="meta-divider">|</span>
           <span>
-            <FileTextOutlined /> 3 phần (Q1–5, Q6–7, Q8)
+            <FileTextOutlined /> 3 phần (Q1-5, Q6-7, Q8)
           </span>
-          <span>•</span>
+          <span className="meta-divider">|</span>
           <span>
             <CheckSquareOutlined /> {test.totalQuestions ?? 8} câu hỏi
           </span>
         </div>
 
         <div className="note">
-          <b>Luyện theo phần</b>: chọn cụm câu (1–5, 6–7 hoặc 8) để luyện
-          nhanh. <br />
-          <b>Full test</b>: làm đủ 8 câu để mô phỏng đề TOEIC Writing thật.
+          <b>Luyện theo phần</b>: Chọn cụm câu (1-5, 6-7 hoặc 8) để luyện nhanh. <br />
+          <b>Full test</b>: Làm đủ 8 câu để mô phỏng đề TOEIC Writing thật.
         </div>
       </div>
 
-      {/* TABS */}
       <div className="tabs">
-        <button
-          className={`tab ${activeTab === "practice" ? "active" : ""}`}
+        <Button
+          className={`tab-btn ${activeTab === "practice" ? "active" : ""}`}
+          shape="round"
+          type={activeTab === "practice" ? "primary" : "default"}
           onClick={() => setActiveTab("practice")}
         >
           Luyện theo phần
-        </button>
-        <button
-          className={`tab ${activeTab === "full" ? "active" : ""}`}
+        </Button>
+        <Button
+          className={`tab-btn ${activeTab === "full" ? "active" : ""}`}
+          shape="round"
+          type={activeTab === "full" ? "primary" : "default"}
           onClick={() => setActiveTab("full")}
         >
           Full Writing Test
-        </button>
-        <button className="tab" disabled>
+        </Button>
+        <Button className="tab-btn" shape="round" disabled>
           Thảo luận
-        </button>
+        </Button>
       </div>
 
-      {/* TAB: PRACTICE BY PART */}
       {activeTab === "practice" && (
         <div className="panel">
           <div className="panel-title">Chọn phần Writing muốn luyện</div>
@@ -288,9 +281,7 @@ const PracticeWritingDetail = () => {
             {WRITING_PARTS.map((p) => (
               <label
                 key={p.key}
-                className={`part ${
-                  selectedParts.includes(p.key) ? "checked" : ""
-                }`}
+                className={`part ${selectedParts.includes(p.key) ? "checked" : ""}`}
               >
                 <input
                   type="checkbox"
@@ -302,7 +293,7 @@ const PracticeWritingDetail = () => {
                   <div className="part-title">
                     {p.name}
                     <span className="count">
-                      {p.key === "w8" ? " (1 câu essay)" : " (nhiều câu nhỏ)"}
+                      {p.key === "w8" ? " (1 câu essay)" : " (nhiều câu ngắn)"}
                     </span>
                   </div>
                 </div>
@@ -312,8 +303,7 @@ const PracticeWritingDetail = () => {
 
           <div className="time-block">
             <div className="label">
-              Giới hạn thời gian{" "}
-              <span className="hint">(để trống = không giới hạn)</span>
+              Giới hạn thời gian <span className="hint">(để trống = không giới hạn)</span>
             </div>
             <select
               className="time-select"
@@ -329,39 +319,41 @@ const PracticeWritingDetail = () => {
             </select>
           </div>
 
-          <button
+          <Button
             className="btn-start"
+            type="primary"
+            block
             onClick={handleStartPractice}
-            disabled={submitting}
+            loading={submitting}
           >
             {submitting ? "Đang tạo bài..." : "Bắt đầu luyện"}
-          </button>
+          </Button>
         </div>
       )}
 
-      {/* TAB: FULL TEST */}
       {activeTab === "full" && (
         <div className="panel">
           <div className="panel-title">Làm full TOEIC Writing</div>
           <p style={{ fontSize: 14, marginBottom: 12 }}>
-            Bạn sẽ làm đủ <b>8 câu Writing</b> trong vòng{" "}
-            <b>{minutes} phút</b>. Hệ thống AI sẽ chấm theo rubric và quy đổi
-            ra <b>điểm TOEIC Writing (0–200)</b>.
+            Bạn sẽ làm đủ <b>8 câu Writing</b> trong <b>{minutes} phút</b>. Hệ thống AI sẽ chấm theo rubric
+            và quy đổi ra <b>điểm TOEIC Writing (0-200)</b>.
           </p>
 
           <ul style={{ fontSize: 14, marginLeft: 18, marginBottom: 16 }}>
-            <li>Questions 1–5: Viết câu dựa trên hình và từ gợi ý.</li>
-            <li>Questions 6–7: Trả lời email công việc.</li>
+            <li>Questions 1-5: Viết câu dựa trên hình và gợi ý từ.</li>
+            <li>Questions 6-7: Trả lời email công việc.</li>
             <li>Question 8: Viết opinion essay.</li>
           </ul>
 
-          <button
+          <Button
             className="btn-start"
+            type="primary"
+            block
             onClick={handleStartFull}
-            disabled={submitting}
+            loading={submitting}
           >
             {submitting ? "Đang tạo bài..." : "Bắt đầu full test"}
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-/* Shared attempt styles */
+/* Page layout */
 .attempt-page {
   padding: 32px 40px;
   background: #f3f4f6;
@@ -114,6 +114,7 @@
   background: rgba(0, 0, 0, 0.06);
 }
 
+/* Layout */
 .attempt-layout {
   display: flex;
   align-items: flex-start;
@@ -132,6 +133,36 @@
   flex-shrink: 0;
 }
 
+.attempt-question {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.q-header {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.q-media {
+  margin-bottom: 12px;
+}
+
+.q-image {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.q-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #111827;
+}
+
 .attempt-actions {
   margin-top: 24px;
   display: flex;
@@ -146,6 +177,32 @@
   gap: 10px;
 }
 
+.submit-box {
+  position: relative;
+  width: 100%;
+}
+
+.submit-panel {
+  display: none;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  gap: 8px;
+  flex-direction: column;
+}
+
+.submit-panel.open {
+  display: flex;
+}
+
+.submit-panel .ant-btn {
+  width: 100%;
+}
+
+/* Sidebar */
 .attempt-sidebar-card {
   position: sticky;
   top: 80px;
@@ -234,6 +291,7 @@
   background: #e0ebff;
 }
 
+/* Responsive */
 @media (max-width: 992px) {
   .attempt-layout {
     flex-direction: column;

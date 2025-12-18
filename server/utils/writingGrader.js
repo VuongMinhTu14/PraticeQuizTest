@@ -1,15 +1,15 @@
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
 import { createHash } from "crypto";
 
 dotenv.config();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const MAX_CALLS_PER_DAY = Number(process.env.GEMINI_MAX_CALLS_PER_DAY || "0"); // 0 = không giới hạn
+const MAX_CALLS_PER_DAY = Number(process.env.GEMINI_MAX_CALLS_PER_DAY || "0"); // 0 = khÃ´ng giá»›i háº¡n
 const TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || "15000");
 
-// Bộ đếm quota đơn giản theo ngày
+// Bá»™ Ä‘áº¿m quota Ä‘Æ¡n giáº£n theo ngÃ y
 let dailyCounter = { day: "", count: 0 };
-// Cache theo nội dung prompt/answer/rubric để tránh gọi trùng
+// Cache theo ná»™i dung prompt/answer/rubric Ä‘á»ƒ trÃ¡nh gá»i trÃ¹ng
 const cache = new Map();
 
 const FALLBACK_RESULT = {
@@ -27,12 +27,48 @@ const FALLBACK_RESULT = {
     organization: "Fallback",
   },
   studyPlan: [
-    "Ôn lại ngữ pháp cơ bản và cấu trúc câu.",
-    "Luyện viết đoạn 120-150 từ, chia ý rõ ràng.",
-    "Rà soát từ vựng và lỗi chính tả trước khi nộp.",
+    "Ã”n láº¡i ngá»¯ phÃ¡p cÆ¡ báº£n vÃ  cáº¥u trÃºc cÃ¢u.",
+    "Luyá»‡n viáº¿t Ä‘oáº¡n 120-150 tá»«, chia Ã½ rÃµ rÃ ng.",
+    "RÃ  soÃ¡t tá»« vá»±ng vÃ  lá»—i chÃ­nh táº£ trÆ°á»›c khi ná»™p.",
   ],
-  feedback: "Hệ thống đang dùng kết quả dự phòng do quota hoặc lỗi AI.",
+  feedback: "Há»‡ thá»‘ng Ä‘ang dÃ¹ng káº¿t quáº£ dá»± phÃ²ng do quota hoáº·c lá»—i AI.",
   fallback: true,
+};
+
+const isTruncatedFeedback = (text = "") => {
+  const trimmed = text.trim();
+  if (!trimmed) return true;
+  if (trimmed.length < 120) return true;
+  if (/[:\-]\s*$/.test(trimmed)) return true; // kết thúc dở dang
+  if (!/[.!?…'"”’)]$/.test(trimmed)) return true; // thiếu dấu kết câu
+  return false;
+};
+
+const buildFeedbackFromScores = ({ taskScore, grammarScore, vocabularyScore, organizationScore }) => {
+  const weak = [];
+  const strong = [];
+  const check = (score, label, weakness, strength) => {
+    if (score <= 2.5) weak.push(`${label}: ${weakness}`);
+    else if (score >= 4) strong.push(`${label}: ${strength}`);
+  };
+
+  check(taskScore, "Task", "cần bám sát yêu cầu và thêm ví dụ cụ thể", "nắm đúng yêu cầu, có ý chính rõ");
+  check(grammarScore, "Grammar", "có lỗi chia thì/cấu trúc, nên đơn giản hóa câu", "câu mạch lạc, ít lỗi hình thái");
+  check(vocabularyScore, "Vocabulary", "từ vựng lặp lại, thiếu paraphrase/collocation", "dùng từ phù hợp, có paraphrase");
+  check(organizationScore, "Organization", "thiếu kết nối giữa ý, đoạn mở/thân/kết chưa rõ", "bố cục gọn, chuyển ý mượt");
+
+  const strongPart =
+    strong.length > 0
+      ? `Điểm mạnh: ${strong.join("; ")}.`
+      : "Điểm mạnh: giữ được cấu trúc cơ bản, ý chính đã xuất hiện.";
+  const weakPart =
+    weak.length > 0
+      ? `Cần cải thiện: ${weak.join("; ")}.`
+      : "Cần cải thiện: thêm ví dụ/chi tiết để làm rõ ý và tăng độ thuyết phục.";
+  const plan =
+    "Gợi ý: (1) Viết dàn ý 2-3 ý chính trước khi viết. (2) Dùng câu 12-18 từ, kiểm tra lại chính tả/chủ-vị. (3) Thêm từ nối (however, moreover, for example) và 1 ví dụ minh họa.";
+
+  return `${strongPart} ${weakPart} ${plan}`;
 };
 
 // map TOEIC Writing 0-200 -> level 1-8
@@ -47,7 +83,7 @@ function mapToeicWritingLevel(score) {
   return 8;
 }
 
-// helper cắt ```json ... ``` nếu model trả về dạng code block
+// helper cáº¯t ```json ... ``` náº¿u model tráº£ vá» dáº¡ng code block
 function extractJson(text = "") {
   const trimmed = text.trim();
   const codeBlockMatch =
@@ -93,12 +129,15 @@ Bạn là giám khảo TOEIC Writing.
 
 Nhiệm vụ:
 - Đọc đề bài (prompt) và bài viết của thí sinh.
-- Chấm bài theo 4 tiêu chí: Task achievement, Grammar, Vocabulary, Organization.
-- Đưa ra điểm Overall và quy đổi sang thang điểm TOEIC Writing 0-200.
+- Chấm 4 tiêu chí: Task achievement, Grammar, Vocabulary, Organization.
+- Đưa ra điểm Overall và quy đổi sang thang TOEIC Writing 0-200.
 - Đánh giá band cho từng tiêu chí và gợi ý lộ trình học tập.
 
+YÊU CẦU NGÔN NGỮ:
+- CHỈ dùng tiếng Việt, không tiếng Anh, không song ngữ, không kèm bản dịch.
+
 YÊU CẦU ĐẦU RA:
-- CHỈ trả về JSON thuần (không giải thích thêm).
+- CHỈ trả về JSON thuần (không giải thích thêm, không bao code block).
 - Cấu trúc JSON:
 
 {
@@ -125,7 +164,7 @@ YÊU CẦU ĐẦU RA:
 }
 
 Lưu ý:
-- Score trong khoảng 0-5; predictedToeicScore trong 0-200.
+- Điểm nằm trong 0-5; predictedToeicScore trong 0-200.
 - Nếu thiếu thông tin, trả về giá trị an toàn nhưng vẫn đúng schema.
 `;
 
@@ -136,8 +175,8 @@ ${prompt}
 [STUDENT ANSWER]
 ${answerText}
 
-[RUBRIC] (ghi chú tiếng Việt, chỉ để tham khảo):
-${rubric || "(không có ghi chú thêm)"}
+[RUBRIC] (ghi chÃº tiáº¿ng Viá»‡t, chá»‰ Ä‘á»ƒ tham kháº£o):
+${rubric || "(khÃ´ng cÃ³ ghi chÃº thÃªm)"}
 `;
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
@@ -173,7 +212,7 @@ ${rubric || "(không có ghi chú thêm)"}
     const data = await res.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
     if (!text) {
-      throw new Error("Gemini trả về trống");
+      throw new Error("Gemini tráº£ vá» trá»‘ng");
     }
     return text;
   } finally {
@@ -188,7 +227,7 @@ export async function gradeWriting({
   level = "TOEIC",
 }) {
   if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY chưa có trong .env");
+    throw new Error("GEMINI_API_KEY chÆ°a cÃ³ trong .env");
   }
 
   const cacheKey = makeCacheKey({ prompt, answerText, rubric });
@@ -197,7 +236,7 @@ export async function gradeWriting({
   }
 
   if (!canCallGemini()) {
-    console.warn("Gemini quota reached, dùng fallback");
+    console.warn("Gemini quota reached, dÃ¹ng fallback");
     return FALLBACK_RESULT;
   }
 
@@ -210,7 +249,7 @@ export async function gradeWriting({
       const jsonStr = extractJson(text);
       parsed = JSON.parse(jsonStr);
     } catch (err) {
-      console.error("Gemini JSON parse error, dùng fallback, raw text:", text);
+      console.error("Gemini JSON parse error, dÃ¹ng fallback, raw text:", text);
       parsed = null;
     }
 
@@ -238,21 +277,36 @@ export async function gradeWriting({
     const bands =
       parsed?.bands && typeof parsed.bands === "object"
         ? {
-            task: parsed.bands.task || "Không rõ",
-            grammar: parsed.bands.grammar || "Không rõ",
-            vocabulary: parsed.bands.vocabulary || "Không rõ",
-            organization: parsed.bands.organization || "Không rõ",
+            task: parsed.bands.task || "KhÃ´ng rÃµ",
+            grammar: parsed.bands.grammar || "KhÃ´ng rÃµ",
+            vocabulary: parsed.bands.vocabulary || "KhÃ´ng rÃµ",
+            organization: parsed.bands.organization || "KhÃ´ng rÃµ",
           }
         : {
-            task: "Không rõ",
-            grammar: "Không rõ",
-            vocabulary: "Không rõ",
-            organization: "Không rõ",
+            task: "KhÃ´ng rÃµ",
+            grammar: "KhÃ´ng rÃµ",
+            vocabulary: "KhÃ´ng rÃµ",
+            organization: "KhÃ´ng rÃµ",
           };
 
     const studyPlan = Array.isArray(parsed?.studyPlan)
       ? parsed.studyPlan.filter((s) => typeof s === "string" && s.trim())
       : [];
+
+    let feedback =
+      typeof parsed?.feedback === "string"
+        ? parsed.feedback.trim()
+        : "AI ch’øa cung c §p nh §-n xAct chi ti §¨t. Vui lAýng th ¯- l §­i sau.";
+    if (isTruncatedFeedback(feedback)) {
+      const cleaned = feedback.replace(/[:\-]\s*$/, "").trim();
+      const fallbackFb = buildFeedbackFromScores({
+        taskScore,
+        grammarScore,
+        vocabularyScore,
+        organizationScore,
+      });
+      feedback = cleaned ? `${cleaned}. ${fallbackFb}` : fallbackFb;
+    }
 
     const result = {
       taskScore,
@@ -264,10 +318,7 @@ export async function gradeWriting({
       toeicWritingLevel: toeicLevel,
       bands,
       studyPlan,
-      feedback:
-        typeof parsed?.feedback === "string"
-          ? parsed.feedback
-          : "AI chưa cung cấp nhận xét chi tiết. Vui lòng thử lại sau.",
+      feedback,
       level,
       fallback: false,
     };
@@ -275,9 +326,10 @@ export async function gradeWriting({
     cache.set(cacheKey, result);
     return result;
   } catch (err) {
-    console.error("gradeWriting fallback vì lỗi/quota:", err?.message || err);
+    console.error("gradeWriting fallback vÃ¬ lá»—i/quota:", err?.message || err);
     return FALLBACK_RESULT;
   }
 }
 
 export default gradeWriting;
+

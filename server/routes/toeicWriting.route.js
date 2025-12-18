@@ -9,6 +9,7 @@ import {
   createWritingAttempt,
   getWritingAttempt,
   submitWritingAttempt,
+  submitWritingAttemptLlama,
   getWritingLastAttempt,
   getMyWritingRecentAttempts,
   getWritingQuestions,
@@ -38,6 +39,7 @@ router.post("/sets/:id/attempts", verifyToken, createWritingAttempt);
 router.get("/attempts/:id", verifyToken, getWritingAttempt);
 router.get("/sets/:setId/questions", getWritingQuestions);
 router.post("/attempts/:attemptId/submit", verifyToken, submitWritingAttempt);
+router.post("/attempts/:attemptId/submit-llama", verifyToken, submitWritingAttemptLlama);
 router.get("/sets/:id/last-attempt", verifyToken, getWritingLastAttempt);
 router.get("/my/recent-attempts", verifyToken, getMyWritingRecentAttempts);
 router.get("/attempts/:id/review", verifyToken, getWritingAttemptReview);

@@ -628,7 +628,8 @@ const doSubmit = async () => {
                         )}
 
                       {/* TEXT */}
-                      {q.questionText && (
+                      {/* Hide question text for Part 1 & 2 */}
+                      {q.questionText && !["p1", "p2"].includes(q.partKey) && (
                         <div className="q-text">{q.questionText}</div>
                       )}
 
@@ -646,7 +647,8 @@ const doSubmit = async () => {
                             value={c.label}
                             className="q-option"
                           >
-                            <b>{c.label}.</b> {c.text}
+                            <b>{c.label}.</b>{" "}
+                            {["p1", "p2"].includes(q.partKey) ? "" : c.text}
                           </Radio>
                         ))}
                       </Radio.Group>

@@ -122,6 +122,15 @@ export const submitWritingAttempt = async (attemptId, answers) => {
   return res.data; // { ok, data: { summary, answers, ... } }
 };
 
+export const submitWritingAttemptLlama = async (attemptId, payload) => {
+  // payload: { answers: [{questionId, answerText, ai?}], llamaAnswers?, llamaResult? }
+  const res = await apiRequest.post(
+    `/toeic-writing/attempts/${attemptId}/submit-llama`,
+    payload
+  );
+  return res.data; // { ok, data: { summary, llamaResult, answers, submissionMethod } }
+};
+
 export const submitToeicWritingAttempt = async (attemptId, answers) => {
   const res = await apiRequest.post(`/toeic-writing/attempts/${attemptId}/submit`, {
     answers,

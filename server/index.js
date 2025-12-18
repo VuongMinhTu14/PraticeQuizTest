@@ -39,7 +39,9 @@ app.use("/toeic", toeicRouter);
 app.use("/admin", adminRouter);
 app.use("/toeic-writing", toeicWritingRouter);
 app.use("/prediction", predictionRouter);
-
+app.get("/", (req, res) => {
+  res.status(200).send("PracticeQuiz API is running");
+});
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
   res.status(err.status || 500).json({
